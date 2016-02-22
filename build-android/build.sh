@@ -30,7 +30,8 @@ function build {
   rm -rf "$current_dir/obj"
   
   cd "$current_dir/jni"
-  $ANDROID_NDK/ndk-build TARGET_PLATFORM=$ANDROID_PLATFORM TARGET_ARCH_ABI=$TARGET_ARCH_ABI
+  $ANDROID_NDK/ndk-build TARGET_PLATFORM=$ANDROID_PLATFORM TARGET_ARCH_ABI=$TARGET_ARCH_ABI \
+    ICONV_PATH=$ICONV_PREFIX
     # \
     # OPENSSL_PATH="$current_dir/third-party/openssl-android-$openssl_build_version" \
     # CYRUS_SASL_PATH="$current_dir/third-party/cyrus-sasl-android-$cyrus_sasl_build_version"

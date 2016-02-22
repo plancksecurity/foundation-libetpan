@@ -140,7 +140,8 @@ src/driver/implementation/data-message \
 src/driver/interface
 
 LOCAL_C_INCLUDES = $(addprefix ../../, $(c_includes)) \
-  $(LOCAL_PATH)/../include $(LOCAL_PATH)/../include/libetpan 
+  $(LOCAL_PATH)/../include $(LOCAL_PATH)/../include/libetpan \
+  $(ICONV_PATH)/include
   # \
   # $(OPENSSL_PATH)/include $(CYRUS_SASL_PATH)/include
 
