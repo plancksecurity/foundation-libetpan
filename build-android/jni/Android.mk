@@ -1,13 +1,13 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-ifeq ($(OPENSSL_PATH),)
-$(error OPENSSL_PATH must be set)
-endif
-
-ifeq ($(CYRUS_SASL_PATH),)
-$(error CYRUS_SASL_PATH must be set)
-endif
+# ifeq ($(OPENSSL_PATH),)
+# $(error OPENSSL_PATH must be set)
+# endif
+# 
+# ifeq ($(CYRUS_SASL_PATH),)
+# $(error CYRUS_SASL_PATH must be set)
+# endif
 
 src_files = \
 ./src/data-types/base64.c \
@@ -140,7 +140,8 @@ src/driver/implementation/data-message \
 src/driver/interface
 
 LOCAL_C_INCLUDES = $(addprefix ../../, $(c_includes)) \
-  $(LOCAL_PATH)/../include $(LOCAL_PATH)/../include/libetpan \
-  $(OPENSSL_PATH)/include $(CYRUS_SASL_PATH)/include
+  $(LOCAL_PATH)/../include $(LOCAL_PATH)/../include/libetpan 
+  # \
+  # $(OPENSSL_PATH)/include $(CYRUS_SASL_PATH)/include
 
 include $(BUILD_STATIC_LIBRARY)

@@ -35,7 +35,7 @@
 #define HAVE_GETPAGESIZE 1
 
 /* Define if you have the iconv() function. */
-/* #undef HAVE_ICONV */
+// #define HAVE_ICONV
 
 /* prototype of iconv() has const parameters */
 /* #undef HAVE_ICONV_PROTO_CONST */
@@ -165,10 +165,10 @@
 /* #undef USE_GNUTLS */
 
 /* Define to use SASL */
-#define USE_SASL 1
+// #define USE_SASL 1
 
 /* Define to use OpenSSL */
-#define USE_SSL 1
+// #define USE_SSL 1
 
 /* Version number of package */
 #define VERSION "1.2"
