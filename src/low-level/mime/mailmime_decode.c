@@ -71,6 +71,9 @@
 static int mailmime_charset_parse(const char * message, size_t length,
 				  size_t * indx, char ** charset);
 
+static int detect_CRCR(const char * message, size_t length,
+                         size_t * indx);
+
 enum {
   MAILMIME_ENCODING_B,
   MAILMIME_ENCODING_Q
@@ -124,12 +127,16 @@ int mailmime_encoded_phrase_parse(const char * default_fromcode,
   
   type = TYPE_ERROR; /* XXX - removes a gcc warning */
   
+  // Start parsing
   while (1) {
     int has_fwd;
     
     word = NULL;
+    
+    // Try to parse this part of the message as mime-encoded
     r = mailmime_encoded_word_parse(message, length, &cur_token, &word, &has_fwd, &missing_closing_quote);
     if (r == MAILIMF_NO_ERROR) {
+      // Either it was mime-encoded or there was no error.
       if ((!first) && has_fwd) {
         if (type != TYPE_ENCODED_WORD) {
           if (mmap_string_append_c(gphrase, ' ') == NULL) {
@@ -171,6 +178,7 @@ int mailmime_encoded_phrase_parse(const char * default_fromcode,
       }
       
       if (wordutf8 != NULL) {
+        // append the word (converted to the proper charset)
         if (mmap_string_append(gphrase, wordutf8) == NULL) {
           mailmime_encoded_word_free(word);
           free(wordutf8);
@@ -183,17 +191,38 @@ int mailmime_encoded_phrase_parse(const char * default_fromcode,
       first = FALSE;
     }
     else if (r == MAILIMF_ERROR_PARSE) {
+      // Wasn't mime-encoded
       /* do nothing */
     }
     else {
+      // Some error condition we didn't expect
       res = r;
       goto free;
     }
     
     if (r == MAILIMF_ERROR_PARSE) {
+      // Not mime-encoded, so parse as if it isn't
       char * raw_word;
       
       raw_word = NULL;
+      
+      // Check for special case of word=^CRCR.
+      // We need to be sure we advanced the cur_token
+      // past it. Usually with an empty string.
+      if (first) {
+        r = detect_CRCR(message, length, &cur_token);
+        if (r == MAILIMF_NO_ERROR) {
+            // We've advanced the token and pretend
+            // the first CR isn't there. Let the algorithm
+            // take care of the legit CRLF.
+            if (mmap_string_append_c(gphrase, ' ') == NULL) {
+                res = MAILIMF_ERROR_MEMORY;
+                goto free;
+            }
+            first = FALSE;
+            break;
+        }
+      }
       r = mailmime_non_encoded_word_parse(message, length,
                                           &cur_token, &raw_word, &has_fwd);
       if (r == MAILIMF_NO_ERROR) {
@@ -296,17 +325,21 @@ mailmime_non_encoded_word_parse(const char * message, size_t length,
   cur_token = * indx;
 
   has_fwd = 0;
+  
+  // Check to see if it starts with folding whitespace
   r = mailimf_fws_parse(message, length, &cur_token);
-  if (r == MAILIMF_NO_ERROR) {
+  if (r == MAILIMF_NO_ERROR) { // it does
     has_fwd = 1;
   }
   if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
+    // legit error
     res = r;
     goto err;
   }
 
   begin = cur_token;
-
+  
+  // Get the word up to the next =? or whitespace
   state = 0;
   end = FALSE;
   while (1) {
@@ -325,7 +358,7 @@ mailmime_non_encoded_word_parse(const char * message, size_t length,
         state = 1;
         break;
       case '?':
-        if (state == 1) {
+        if (state == 1) { // begin of mime-encoding?
           cur_token --;
           end = TRUE;
         }
@@ -340,7 +373,7 @@ mailmime_non_encoded_word_parse(const char * message, size_t length,
     cur_token ++;
   }
 
-  if (cur_token - begin == 0) {
+  if (cur_token - begin == 0) { // we processed nothing, bail
     res = MAILIMF_ERROR_PARSE;
     goto err;
   }
@@ -389,14 +422,15 @@ int mailmime_encoded_word_parse(const char * message, size_t length,
   missing_closing_quote = 0;
   has_fwd = 0;
   r = mailimf_fws_parse(message, length, &cur_token);
-  if (r == MAILIMF_NO_ERROR) {
+  if (r == MAILIMF_NO_ERROR) { // there was folding whitespace, now consumed
     has_fwd = 1;
   }
-  if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
+  if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) { // actual error
     res = r;
     goto err;
   }
-
+  
+  // check for opening quote, consume if so
   opening_quote = FALSE;
   r = mailimf_char_parse(message, length, &cur_token, '\"');
   if (r == MAILIMF_NO_ERROR) {
@@ -410,42 +444,50 @@ int mailmime_encoded_word_parse(const char * message, size_t length,
     goto err;
   }
 
+  // Check for MIME encoded-word syntax
+  // =?charset?encoding?encoded text?=
   r = mailimf_token_case_insensitive_parse(message, length, &cur_token, "=?");
   if (r != MAILIMF_NO_ERROR) {
     res = r;
     goto err;
   }
 
+  // get charset
   r = mailmime_charset_parse(message, length, &cur_token, &charset);
   if (r != MAILIMF_NO_ERROR) {
     res = r;
     goto err;
   }
 
+  // charset terminator
   r = mailimf_char_parse(message, length, &cur_token, '?');
   if (r != MAILIMF_NO_ERROR) {
     res = r;
     goto free_charset;
   }
 
+  // get encoding
   r = mailmime_encoding_parse(message, length, &cur_token, &encoding);
   if (r != MAILIMF_NO_ERROR) {
     res = r;
     goto free_charset;
   }
 
+  // encoding terminator
   r = mailimf_char_parse(message, length, &cur_token, '?');
   if (r != MAILIMF_NO_ERROR) {
     res = r;
     goto free_charset;
   }
 
+  // get encoded text
   end = FALSE;
   end_encoding = cur_token;
   while (1) {
     if (end_encoding >= length)
       break;
 
+    // are we done?
     if (end_encoding + 1 < length) {
       if ((message[end_encoding] == '?') && (message[end_encoding + 1] == '=')) {
         end = TRUE;
@@ -458,44 +500,49 @@ int mailmime_encoded_word_parse(const char * message, size_t length,
     end_encoding ++;
   }
 
+  // decode text
   decoded_len = 0;
   decoded = NULL;
   switch (encoding) {
-  case MAILMIME_ENCODING_B:
-    r = mailmime_base64_body_parse(message, end_encoding,
-				   &cur_token, &decoded,
-				   &decoded_len);
-      
-    if (r != MAILIMF_NO_ERROR) {
-      res = r;
-      goto free_charset;
-    }
-    break;
-  case MAILMIME_ENCODING_Q:
-    r = mailmime_quoted_printable_body_parse(message, end_encoding,
-					     &cur_token, &decoded,
-					     &decoded_len, TRUE);
-
-    if (r != MAILIMF_NO_ERROR) {
-      res = r;
-      goto free_charset;
-    }
-
-    break;
+      case MAILMIME_ENCODING_B:
+          r = mailmime_base64_body_parse(message, end_encoding,
+                                         &cur_token, &decoded,
+                                         &decoded_len);
+          
+          if (r != MAILIMF_NO_ERROR) {
+              res = r;
+              goto free_charset;
+          }
+          break;
+      case MAILMIME_ENCODING_Q:
+          r = mailmime_quoted_printable_body_parse(message, end_encoding,
+                                                   &cur_token, &decoded,
+                                                   &decoded_len, TRUE);
+          
+          if (r != MAILIMF_NO_ERROR) {
+              res = r;
+              goto free_charset;
+          }
+          
+          break;
   }
-
+  
   text = malloc(decoded_len + 1);
   if (text == NULL) {
     res = MAILIMF_ERROR_MEMORY;
     goto free_charset;
   }
 
+  // Copy decoded text
   if (decoded_len > 0)
     memcpy(text, decoded, decoded_len);
   text[decoded_len] = '\0';
 
   mailmime_decoded_part_free(decoded);
 
+  // Detect if we stopped parsing the *encoded* text (before we sent it off to
+  // be decoded because we hit the terminator, or because we hit the end
+  // of the specified length
   r = mailimf_token_case_insensitive_parse(message, length, &cur_token, "?=");
 #if 0
   if (r != MAILIMF_NO_ERROR) {
@@ -617,4 +664,21 @@ static int mailmime_etoken_parse(const char * message, size_t length,
   return mailimf_custom_string_parse(message, length,
 				     indx, result,
 				     is_etoken_char);
+}
+
+static int detect_CRCR(const char * message, size_t length,
+                              size_t * indx) {
+    size_t cur_token = *indx;
+    int r = mailimf_char_parse(message, length, &cur_token, '\r');
+    if (r == MAILIMF_NO_ERROR) {
+        r = mailimf_char_parse(message, length, &cur_token, '\r');
+        if (r == MAILIMF_NO_ERROR) {
+            // Yup, there was a CRCR here.
+            // Advance token past the first \r
+            *indx = (*indx) + 1;
+            return r;
+        }
+    }
+    // Leave indx alone and move on.
+    return MAILIMF_ERROR_PARSE; // not actual error. Usual behaviour.
 }
