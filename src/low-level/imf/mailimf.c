@@ -574,15 +574,15 @@ mailimf_struct_multiple_parse(const char * message, size_t length,
     r = parser(message, length, &cur_token, &value);
     if (r != MAILIMF_NO_ERROR) {
       if (r == MAILIMF_ERROR_PARSE)
-	break;
+        break;
       else {
-	res = r;
-	goto free;
+        res = r;
+        goto free;
       }
     }
     r = clist_append(struct_list, value);
     if (r < 0) {
-      (* destructor)(value);
+      (*destructor)(value);
       res = MAILIMF_ERROR_MEMORY;
       goto free;
     }
@@ -7529,30 +7529,26 @@ int mailimf_envelope_fields_parse(const char * message, size_t length,
   }
 
   while (1) {
-    struct mailimf_field * elt;
+    struct mailimf_field *elt;
 
     r = mailimf_envelope_field_parse(message, length, &cur_token, &elt);
     if (r == MAILIMF_NO_ERROR) {
       r = clist_append(list, elt);
       if (r < 0) {
-	res = MAILIMF_ERROR_MEMORY;
-	goto free;
+        res = MAILIMF_ERROR_MEMORY;
+        goto free;
       }
-    }
-    else if (r == MAILIMF_ERROR_PARSE) {
+    } else if (r == MAILIMF_ERROR_PARSE) {
       r = mailimf_ignore_field_parse(message, length, &cur_token);
       if (r == MAILIMF_NO_ERROR) {
-	/* do nothing */
+        /* do nothing */
+      } else if (r == MAILIMF_ERROR_PARSE) {
+        break;
+      } else {
+        res = r;
+        goto free;
       }
-      else if (r == MAILIMF_ERROR_PARSE) {
-	break;
-      }
-      else {
-	res = r;
-	goto free;
-      }
-    }
-    else {
+    } else {
       res = r;
       goto free;
     }
@@ -7764,6 +7760,56 @@ mailimf_optional_fields_parse(const char * message, size_t length,
   }
 
   * result = fields;
+  * indx = cur_token;
+
+  return MAILIMF_NO_ERROR;
+
+ free:
+  if (list != NULL) {
+    clist_foreach(list, (clist_func) mailimf_field_free, NULL);
+    clist_free(list);
+  }
+ err:
+  return res;
+}
+
+LIBETPAN_EXPORT
+int
+mailimf_memoryhole_fields_parse(const char * message, size_t length,
+			                    size_t * indx,
+			                    struct mailimf_fields ** result)
+{
+  size_t cur_token;
+  clist * list;
+  struct mailimf_fields * fields;
+  int r = MAILIMF_ERROR_PARSE;
+  int res;
+
+  cur_token = * indx;
+
+  list = NULL;
+
+  const char* rfc822_header_string = "Content-Type: text/rfc822-headers;";
+  const size_t rfc822_header_strlen = 34;
+  
+  const char* cur_char = message + cur_token;
+  
+  if ((cur_token + rfc822_header_strlen) <= length &&
+      strncmp(cur_char, rfc822_header_string, rfc822_header_strlen) == 0) {
+      r = mailimf_envelope_fields_parse(message, length, &cur_token,
+                                        result);
+  }
+          
+  switch (r) {
+  case MAILIMF_NO_ERROR:
+    /* do nothing */
+    break;
+
+  default:
+    res = r;
+    goto err;
+  }
+
   * indx = cur_token;
 
   return MAILIMF_NO_ERROR;

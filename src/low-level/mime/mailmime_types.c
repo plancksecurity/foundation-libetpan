@@ -436,6 +436,7 @@ struct mailmime * mailmime_new(int mm_type,
   mime->mm_mime_fields = mm_mime_fields;
   mime->mm_content_type = mm_content_type;
   
+  mime->mm_imf_fields = NULL;
   mime->mm_body = mm_body;
 
   switch (mm_type) {
@@ -505,6 +506,8 @@ void mailmime_free(struct mailmime * mime)
 
   if (mime->mm_mime_fields != NULL)
     mailmime_fields_free(mime->mm_mime_fields);
+  if (mime->mm_imf_fields != NULL)
+    mailimf_fields_free(mime->mm_imf_fields);
   if (mime->mm_content_type != NULL)
     mailmime_content_free(mime->mm_content_type);
   free(mime);

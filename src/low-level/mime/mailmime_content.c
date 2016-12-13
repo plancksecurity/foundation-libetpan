@@ -790,35 +790,35 @@ int mailmime_multipart_next_parse(const char * message, size_t length,
 
     if (cur_token >= length)
       return MAILIMF_ERROR_PARSE;
-    
-    switch(state) {
+
+    switch (state) {
 
     case MULTIPART_NEXT_STATE_0:
       switch (message[cur_token]) {
       case ' ':
-	state = MULTIPART_NEXT_STATE_0;
-	break;
+        state = MULTIPART_NEXT_STATE_0;
+        break;
       case '\t':
-	state = MULTIPART_NEXT_STATE_0;
-	break;
+        state = MULTIPART_NEXT_STATE_0;
+        break;
       case '\r':
-	state = MULTIPART_NEXT_STATE_1;
-	break;
+        state = MULTIPART_NEXT_STATE_1;
+        break;
       case '\n':
-	state = MULTIPART_NEXT_STATE_2;
-	break;
+        state = MULTIPART_NEXT_STATE_2;
+        break;
       default:
-	return MAILIMF_ERROR_PARSE;
+        return MAILIMF_ERROR_PARSE;
       }
       break;
 
     case MULTIPART_NEXT_STATE_1:
       switch (message[cur_token]) {
       case '\n':
-	state = MULTIPART_NEXT_STATE_2;
-	break;
+        state = MULTIPART_NEXT_STATE_2;
+        break;
       default:
-	return MAILIMF_ERROR_PARSE;
+        return MAILIMF_ERROR_PARSE;
       }
       break;
     }
@@ -831,6 +831,7 @@ int mailmime_multipart_next_parse(const char * message, size_t length,
   return MAILIMF_NO_ERROR;
 }
 
+/* N.B. Modified to allow add enigmail memoryhole Subject header to fields. */
 static int
 mailmime_multipart_body_parse(const char * message, size_t length,
     size_t * indx, char * boundary,
@@ -911,13 +912,14 @@ mailmime_multipart_body_parse(const char * message, size_t length,
   preamble_length = preamble_end - preamble_begin;
   
   part_begin = cur_token;
+  
   while (1) {
     r = mailmime_lwsp_parse(message, length, &cur_token);
     if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
       res = r;
       goto err;
     }
-    
+        
     r = mailimf_crlf_parse(message, length, &cur_token);
     if (r == MAILIMF_NO_ERROR) {
       part_begin = cur_token;
@@ -941,7 +943,10 @@ mailmime_multipart_body_parse(const char * message, size_t length,
   }
   
   final_part = 0;
-  
+
+  /* Go through the whole block of parts corresponding to this boundary,
+     parse each by consuming each one and going back to the top of
+     the loop */  
   while (!final_part) {
     size_t bp_token;
     struct mailmime * mime_bp;
@@ -949,7 +954,7 @@ mailmime_multipart_body_parse(const char * message, size_t length,
     size_t data_size;
     struct mailimf_fields * fields;
     struct mailmime_fields * mime_fields;
-
+    
     r = mailmime_body_part_dash2_transport_crlf_parse(message, length,
         &cur_token, boundary, &data_str, &data_size);
     if (r == MAILIMF_ERROR_PARSE) {
@@ -962,29 +967,44 @@ mailmime_multipart_body_parse(const char * message, size_t length,
     
     if (r == MAILIMF_NO_ERROR) {
       bp_token = 0;
-      
-      r = mailimf_optional_fields_parse(data_str, data_size,
+    
+      struct mailimf_fields * envelope_fields = NULL;
+
+      int is_memoryhole_part = 0;
+    
+         
+      r = mailimf_memoryhole_fields_parse(data_str, data_size,
           &bp_token, &fields);
-      if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
-        res = r;
-        goto free;
-      }
-      
-      r = mailimf_crlf_parse(data_str, data_size, &bp_token);
-      if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
-        mailimf_fields_free(fields);
-        res = r;
-        goto free;
-      }
-      
+     
+      if (r == MAILIMF_NO_ERROR) {
+          is_memoryhole_part = 1;
+      }  
+      else {
+          r = mailimf_optional_fields_parse(data_str, data_size,
+              &bp_token, &fields);
+          if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
+            res = r;
+            goto free;
+          }
+          
+          r = mailimf_crlf_parse(data_str, data_size, &bp_token);
+          if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
+            mailimf_fields_free(fields);
+            res = r;
+            goto free;
+          }
+      } 
+           
       mime_fields = NULL;
       r = mailmime_fields_parse(fields, &mime_fields);
-      mailimf_fields_free(fields);
+      
+      /* mailimf_fields_free(fields); */ /* we don't do this now to preserve for memoryhole */
+      
       if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
         res = r;
         goto free;
       }
-      
+
       r = mailmime_parse_with_default(data_str, data_size,
           &bp_token, default_subtype, NULL,
           mime_fields, &mime_bp);
@@ -1006,6 +1026,8 @@ mailmime_multipart_body_parse(const char * message, size_t length,
         goto free;
       }
       
+      mime_bp->mm_imf_fields = fields;
+
       r = mailmime_multipart_next_parse(message, length, &cur_token);
       if (r == MAILIMF_NO_ERROR) {
         /* do nothing */
@@ -1089,7 +1111,8 @@ mailmime_multipart_body_parse(const char * message, size_t length,
 
 enum {
   MAILMIME_DEFAULT_TYPE_TEXT_PLAIN,
-  MAILMIME_DEFAULT_TYPE_MESSAGE
+  MAILMIME_DEFAULT_TYPE_MESSAGE,
+  MAILMIME_DEFAULT_TYPE_RFC2822_EXTRA_HEADERS
 };
 
 
@@ -1240,29 +1263,28 @@ static void remove_unparsed_mime_headers(struct mailimf_fields * fields)
   }
 }
 
-static int mailmime_parse_with_default(const char * message, size_t length,
-    size_t * indx, int default_type,
-    struct mailmime_content * content_type,
-    struct mailmime_fields * mime_fields,
-    struct mailmime ** result)
-{
+static int mailmime_parse_with_default(const char *message, size_t length,
+                                       size_t *indx, int default_type,
+                                       struct mailmime_content *content_type,
+                                       struct mailmime_fields *mime_fields,
+                                       struct mailmime **result) {
   size_t cur_token;
 
   int body_type;
 
   int encoding;
-  struct mailmime_data * body;
-  char * boundary;
-  struct mailimf_fields * fields;
-  clist * list;
-  struct mailmime * msg_mime;
+  struct mailmime_data *body;
+  char *boundary;
+  struct mailimf_fields *fields;
+  clist *list;
+  struct mailmime *msg_mime;
 
-  struct mailmime * mime;
+  struct mailmime *mime;
 
   int r;
   int res;
-  struct mailmime_data * preamble;
-  struct mailmime_data * epilogue;
+  struct mailmime_data *preamble;
+  struct mailmime_data *epilogue;
 
   /*
     note that when this function is called, content type is always detached,
@@ -1271,23 +1293,23 @@ static int mailmime_parse_with_default(const char * message, size_t length,
 
   preamble = NULL;
   epilogue = NULL;
-  
-  cur_token = * indx;
+
+  cur_token = *indx;
 
   /* get content type */
 
   if (content_type == NULL) {
     if (mime_fields != NULL) {
-      clistiter * cur;
-      
-      for(cur = clist_begin(mime_fields->fld_list) ; cur != NULL ;
-          cur = clist_next(cur)) {
-        struct mailmime_field * field;
-        
+      clistiter *cur;
+
+      for (cur = clist_begin(mime_fields->fld_list); cur != NULL;
+           cur = clist_next(cur)) {
+        struct mailmime_field *field;
+
         field = clist_content(cur);
         if (field->fld_type == MAILMIME_FIELD_TYPE) {
           content_type = field->fld_data.fld_content;
-          
+
           /* detach content type from list */
           field->fld_data.fld_content = NULL;
           clist_delete(mime_fields->fld_list, cur);
@@ -1309,17 +1331,16 @@ static int mailmime_parse_with_default(const char * message, size_t length,
     if (default_type == MAILMIME_DEFAULT_TYPE_TEXT_PLAIN) {
       content_type = mailmime_get_content_text();
       if (content_type == NULL) {
-	res = MAILIMF_ERROR_MEMORY;
-	goto err;
+        res = MAILIMF_ERROR_MEMORY;
+        goto err;
       }
-    }
-    else /* message */ {
+    } else /* message */ {
       body_type = MAILMIME_MESSAGE;
-      
+
       content_type = mailmime_get_content_message();
       if (content_type == NULL) {
-	res = MAILIMF_ERROR_MEMORY;
-	goto err;
+        res = MAILIMF_ERROR_MEMORY;
+        goto err;
       }
     }
   }
@@ -1333,19 +1354,19 @@ static int mailmime_parse_with_default(const char * message, size_t length,
     switch (content_type->ct_type->tp_data.tp_composite_type->ct_type) {
     case MAILMIME_COMPOSITE_TYPE_MULTIPART:
       boundary = mailmime_extract_boundary(content_type);
-      
+
       if (boundary == NULL)
-	body_type = MAILMIME_SINGLE;
+        body_type = MAILMIME_SINGLE;
       else
-	body_type = MAILMIME_MULTIPLE;
+        body_type = MAILMIME_MULTIPLE;
       break;
-      
+
     case MAILMIME_COMPOSITE_TYPE_MESSAGE:
 
       if (strcasecmp(content_type->ct_subtype, "rfc822") == 0)
-	body_type = MAILMIME_MESSAGE;
+        body_type = MAILMIME_MESSAGE;
       else
-	body_type = MAILMIME_SINGLE;
+        body_type = MAILMIME_SINGLE;
       break;
 
     default:
@@ -1365,20 +1386,19 @@ static int mailmime_parse_with_default(const char * message, size_t length,
     encoding = mailmime_transfer_encoding_get(mime_fields);
   else
     encoding = MAILMIME_MECHANISM_8BIT;
-  
+
   if (body_type == MAILMIME_MESSAGE) {
     switch (encoding) {
-      case MAILMIME_MECHANISM_QUOTED_PRINTABLE:
-      case MAILMIME_MECHANISM_BASE64:
-        body_type = MAILMIME_SINGLE;
-        break;
+    case MAILMIME_MECHANISM_QUOTED_PRINTABLE:
+    case MAILMIME_MECHANISM_BASE64:
+      body_type = MAILMIME_SINGLE;
+      break;
     }
   }
-  
-  cur_token = * indx;
-  body = mailmime_data_new(MAILMIME_DATA_TEXT, encoding, 1,
-      message + cur_token, length - cur_token,
-      NULL);
+
+  cur_token = *indx;
+  body = mailmime_data_new(MAILMIME_DATA_TEXT, encoding, 1, message + cur_token,
+                           length - cur_token, NULL);
   if (body == NULL) {
     free(boundary);
     res = MAILIMF_ERROR_MEMORY;
@@ -1392,107 +1412,109 @@ static int mailmime_parse_with_default(const char * message, size_t length,
   fields = NULL;
 
   switch (body_type) {
-  case MAILMIME_MESSAGE:
-    {
-      struct mailmime_fields * submime_fields;
-     
-      r = mailimf_envelope_and_optional_fields_parse(message, length,
-          &cur_token, &fields);
-      if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
-        res = r;
-        goto free_content;
-      }
-      
-      r = mailimf_crlf_parse(message, length, &cur_token);
-      if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
-        mailimf_fields_free(fields);
-        res = r;
-        goto free_content;
-      }
-      
-      submime_fields = NULL;
-      r = mailmime_fields_parse(fields, &submime_fields);
-      if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
-        mailimf_fields_free(fields);
-        res = r;
-        goto free_content;
-      }
-      
-      remove_unparsed_mime_headers(fields);
-      
-      r = mailmime_parse_with_default(message, length,
-          &cur_token, MAILMIME_DEFAULT_TYPE_TEXT_PLAIN,
-          NULL, submime_fields, &msg_mime);
-      if (r == MAILIMF_NO_ERROR) {
-        /* do nothing */
-      }
-      else if (r == MAILIMF_ERROR_PARSE) {
-        mailmime_fields_free(mime_fields);
-        msg_mime = NULL;
-      }
-      else {
-        mailmime_fields_free(mime_fields);
-        res = r;
-        goto free_content;
-      }
+  case MAILMIME_MESSAGE: {
+    struct mailmime_fields *submime_fields;
+
+    r = mailimf_envelope_and_optional_fields_parse(message, length, &cur_token,
+                                                   &fields);
+    if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
+      res = r;
+      goto free_content;
     }
-    
-    break;
 
-  case MAILMIME_MULTIPLE:
-    {
-      int default_subtype;
-
-      default_subtype = MAILMIME_DEFAULT_TYPE_TEXT_PLAIN;
-      if (content_type != NULL)
-	if (strcasecmp(content_type->ct_subtype, "digest") == 0)
-	  default_subtype = MAILMIME_DEFAULT_TYPE_MESSAGE;
-
-      cur_token = * indx;
-      r = mailmime_multipart_body_parse(message, length,
-          &cur_token, boundary,
-          default_subtype,
-          &list, &preamble, &epilogue);
-      if (r == MAILIMF_NO_ERROR) {
-	/* do nothing */
-      }
-      else if (r == MAILIMF_ERROR_PARSE) {
-	list = clist_new();
-        if (list == NULL) {
-          res = MAILIMF_ERROR_MEMORY;
-          goto free_content;
-        }
-      }
-      else {
-	res = r;
-	goto free_content;
-      }
-
-      free(boundary);
+    r = mailimf_crlf_parse(message, length, &cur_token);
+    if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
+      mailimf_fields_free(fields);
+      res = r;
+      goto free_content;
     }
-    break;
-    
+
+    submime_fields = NULL;
+    r = mailmime_fields_parse(fields, &submime_fields);
+    if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
+      mailimf_fields_free(fields);
+      res = r;
+      goto free_content;
+    }
+
+    remove_unparsed_mime_headers(fields);
+
+    r = mailmime_parse_with_default(message, length, &cur_token,
+                                    MAILMIME_DEFAULT_TYPE_TEXT_PLAIN, NULL,
+                                    submime_fields, &msg_mime);
+    if (r == MAILIMF_NO_ERROR) {
+      /* do nothing */
+    } else if (r == MAILIMF_ERROR_PARSE) {
+      mailmime_fields_free(mime_fields);
+      msg_mime = NULL;
+    } else {
+      mailmime_fields_free(mime_fields);
+      res = r;
+      goto free_content;
+    }
+  }
+
+  break;
+
+  case MAILMIME_MULTIPLE: {
+    int default_subtype;
+
+    default_subtype = MAILMIME_DEFAULT_TYPE_TEXT_PLAIN;
+    if (content_type != NULL)
+      if (strcasecmp(content_type->ct_subtype, "digest") == 0)
+        default_subtype = MAILMIME_DEFAULT_TYPE_MESSAGE;
+
+    cur_token = *indx;
+    r = mailmime_multipart_body_parse(message, length, &cur_token, boundary,
+                                      default_subtype, &list, &preamble,
+                                      &epilogue);
+    if (r == MAILIMF_NO_ERROR) {
+      /* do nothing */
+    } else if (r == MAILIMF_ERROR_PARSE) {
+      list = clist_new();
+      if (list == NULL) {
+        res = MAILIMF_ERROR_MEMORY;
+        goto free_content;
+      }
+    } else {
+      res = r;
+      goto free_content;
+    }
+
+    free(boundary);
+  } break;
+
   default: /* MAILMIME_SINGLE */
-    /* do nothing */
+    if (strcasecmp(content_type->ct_subtype, "rfc822-headers") == 0) {
+      //        default_subtype = MAILMIME_DEFAULT_TYPE_RFC2822_EXTRA_HEADERS;
+      struct mailmime_fields *submime_fields;
+
+      r = mailimf_envelope_and_optional_fields_parse(message, length,
+                                                     &cur_token, &fields);
+      if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
+        res = r;
+        goto free_content;
+      }
+    }
+    /* else do nothing */
     break;
   }
 
-  mime = mailmime_new(body_type, message, length,
-      mime_fields, content_type,
-      body, preamble, /* preamble */
-      epilogue, /* epilogue */
-      list, fields, msg_mime);
+  mime = mailmime_new(body_type, message, length, mime_fields, content_type,
+                      body, preamble, /* preamble */
+                      epilogue,       /* epilogue */
+                      list, fields, msg_mime);
   if (mime == NULL) {
     res = MAILIMF_ERROR_MEMORY;
     goto free;
   }
 
-  * result = mime;
-  * indx = length;
+  *result = mime;
+  *indx = length;
 
   return MAILIMF_NO_ERROR;
 
- free:
+free:
   if (epilogue != NULL)
     mailmime_data_free(epilogue);
   if (preamble != NULL)
@@ -1500,12 +1522,12 @@ static int mailmime_parse_with_default(const char * message, size_t length,
   if (msg_mime != NULL)
     mailmime_free(msg_mime);
   if (list != NULL) {
-    clist_foreach(list, (clist_func) mailmime_free, NULL);
+    clist_foreach(list, (clist_func)mailmime_free, NULL);
     clist_free(list);
   }
- free_content:
+free_content:
   mailmime_content_free(content_type);
- err:
+err:
   return res;
 }
 
