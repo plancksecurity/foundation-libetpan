@@ -111,6 +111,12 @@ int mailmime_language_parse(const char * message, size_t length,
 			    size_t * indx,
 			    struct mailmime_language ** result);
 
+LIBETPAN_EXPORT
+int
+mailimf_memoryhole_fields_parse(const char * message, size_t length,
+                                size_t * indx,
+                                struct mailimf_fields ** result);
+
 #ifdef __cplusplus
 }
 #endif
