@@ -1,7 +1,7 @@
 #!/bin/sh
 
 build_version=1
-ANDROID_PLATFORM=android-21
+ANDROID_PLATFORM=android-18
 # openssl_build_version=1
 # cyrus_sasl_build_version=1
 archs="armeabi armeabi-v7a x86 x86_64"
