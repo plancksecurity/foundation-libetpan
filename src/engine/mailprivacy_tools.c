@@ -40,6 +40,10 @@
 #include "mailprivacy_tools.h"
 #include "mailprivacy_tools_private.h"
 
+#if __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -1331,6 +1335,12 @@ int mailprivacy_spawn_and_wait(char * command, char * passphrase,
     char * stdoutfile, char * stderrfile,
     int * bad_passphrase)
 {
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+  //https://github.com/dinhviethoa/libetpan/issues/275
+  //mailprivacy_spawn_and_wait is not needed on iOS
+  return MAIL_ERROR_COMMAND;
+#endif
+
 #ifdef WIN32
   int res;
   SECURITY_ATTRIBUTES sec_attr;
@@ -1517,11 +1527,16 @@ int mailprivacy_spawn_and_wait(char * command, char * passphrase,
       Dup2(fd_err, 2);
       Close(fd_err);
  
+#if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+      //https://github.com/dinhviethoa/libetpan/issues/275
+      //system() is not supported on iOS 11.
+
       // BUG: status may be -1 and errno may be EINTR if waitpid(2) was
       // interrupted by a signal; to handle that properly the PID of the
       // fork(2)ed child has to be determined and waitpid(2) has to be
       // called again
       status = system(command);
+#endif
       
       exit(WEXITSTATUS(status));
     }

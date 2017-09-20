@@ -39,6 +39,11 @@
 
 #include "mailprivacy_smime.h"
 #include <string.h>
+
+#if __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 #ifdef WIN32
 #	include "win_etpan.h"
 #	define WEXITSTATUS(r) (r)
@@ -1542,6 +1547,12 @@ static int get_cert_from_sig(struct mailprivacy * privacy,
   int r;
   char command[PATH_MAX];
 
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+  //https://github.com/dinhviethoa/libetpan/issues/275
+  //get_cert_from_sig is not needed on iOS
+  return MAIL_ERROR_COMMAND;
+#endif
+
   if (* cert_dir == '\0')
     return MAIL_ERROR_INVAL;
 
@@ -1561,7 +1572,7 @@ static int get_cert_from_sig(struct mailprivacy * privacy,
   cur = clist_begin(mime->mm_data.mm_multipart.mm_mp_list);
   if (cur == NULL) {
     res = MAIL_ERROR_INVAL;
-    goto err;
+   goto err;
   }
   
   signed_mime = cur->data;
@@ -1602,7 +1613,13 @@ static int get_cert_from_sig(struct mailprivacy * privacy,
       "openssl pkcs7 -inform DER -in '%s' -out '%s' -print_certs 2>/dev/null",
       quoted_signature_filename, quoted_store_cert_filename);
   
-  r = system(command);
+// N.B. This is only about compilation - we already don't execute this function with iPhone.
+#if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+  //https://github.com/dinhviethoa/libetpan/issues/275
+  //system() is not supported on iOS 11.
+   r = system(command);
+#endif
+
   if (WEXITSTATUS(r) != 0) {
     res = MAIL_ERROR_COMMAND;
     goto unlink_signature;
