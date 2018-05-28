@@ -75,6 +75,14 @@ int mailimap_uid_copy_send(mailstream * fd,
 				struct mailimap_set * set,
 				const char * mb);
 
+int mailimap_move_send(mailstream * fd,
+                       struct mailimap_set * set,
+                       const char * mb);
+
+int mailimap_uid_move_send(mailstream * fd,
+                           struct mailimap_set * set,
+                           const char * mb);
+
 int mailimap_create_send(mailstream * fd,
 				const char * mb);
 
@@ -205,6 +213,8 @@ int mailimap_mod_sequence_value_send(mailstream * fd, uint64_t modseq);
 int mailimap_uint64_send(mailstream * fd, uint64_t number);
 
 int mailimap_number_send(mailstream * fd, uint32_t number);
+  
+int mailimap_send_custom_command(mailstream *fd, const char * command);
 
 #ifdef __cplusplus
 }

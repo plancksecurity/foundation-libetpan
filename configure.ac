@@ -2,10 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 m4_define([maj_version], [1])
-m4_define([min_version], [6])
-m4_define([api_current], [18])
+m4_define([min_version], [8])
+m4_define([mic_version], [0])
+m4_define([api_current], [21])
 m4_define([api_revision], [0])
-m4_define([api_compatibility], [17])
+m4_define([api_compatibility], [20])
 dnl API version
 dnl 1. If you have changed any of the sources for this library, the revision
 dnl    number must be incremented. This is a new revision of the current
@@ -23,7 +24,7 @@ dnl    interface.
 dnl age = api_current - api_compatiblity
 
 AC_PREREQ(2.61)
-AC_INIT([libetpan],[maj_version.min_version],[libetpan-devel@lists.sourceforge.net])
+AC_INIT([libetpan],[maj_version.min_version.mic_version],[libetpan-devel@lists.sourceforge.net])
 AC_CONFIG_SRCDIR([src/main/libetpan_version.h.in])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADER([config.h])
@@ -31,9 +32,10 @@ AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 AC_CANONICAL_HOST
 
-dnl Version major and minor
+dnl Version major, minor and micro
 VERSION_MAJOR=maj_version
 VERSION_MINOR=min_version
+VERSION_MICRO=mic_version
 
 dnl required version of libcurl
 libcurl_major_required=0
@@ -70,7 +72,7 @@ AC_SUBST(BUILD_REVISION)
 BUILD_TIMESTAMP=`date +'%Y-%m-%dT%H:%M%z'`
 AC_SUBST(BUILD_TIMESTAMP)
 changequote(,)dnl 
-BUILD_FILEVERSION=`echo "${VERSION_MAJOR}.${VERSION_MINOR}.0" | sed 's/\([0-9.]*\).*/\1./;s/\./,/g'`
+BUILD_FILEVERSION=`echo "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_MICRO}" | sed 's/\([0-9.]*\).*/\1./;s/\./,/g'`
 changequote([,])dnl
 BUILD_FILEVERSION="${BUILD_FILEVERSION}${BUILD_REVISION}"
 AC_SUBST(BUILD_FILEVERSION)
@@ -109,13 +111,13 @@ AC_PROG_CC
 AC_PROG_CXX
 
 # Compiler flags.
-AC_ARG_ENABLE(debug,   [  --enable-debug          setup flags (gcc) for debugging (default=no)],
+AC_ARG_ENABLE(debug, [AC_HELP_STRING([--enable-debug], [setup flags (gcc) for debugging (default=no)])],
 if test "x$enable_debug" = xyes; then
   CFLAGS="$CFLAGS -O2 -g"
 fi
 CPPFLAGS="$CPPFLAGS -DDEBUG"
 LDFLAGS="$LDFLAGS",)
-AC_ARG_ENABLE(optim,   [  --enable-optim          setup flags (gcc) for optimizations (default=no)],
+AC_ARG_ENABLE(optim, [AC_HELP_STRING([--enable-optim], [setup flags (gcc) for optimizations (default=no)])],
 if test "x$enable_debug" != "xyes" ; then
   if test "x$GCC" = xyes; then
     CFLAGS="$CFLAGS -O2 -ffast-math -funroll-loops -g0"
@@ -128,7 +130,7 @@ fi,)
 if test "x$GCC" = xyes; then
   CFLAGS="$CFLAGS -W -Wall"
 fi
-AC_ARG_ENABLE(syntax,   [  --enable-unstrict-syntax be lazy on syntax checking for protocols (default=no)], , [AC_DEFINE(UNSTRICT_SYNTAX, 1, [Define to be lazy on protocol syntax])])
+AC_ARG_ENABLE(syntax, [AC_HELP_STRING([--enable-unstrict-syntax], [be lazy on syntax checking for protocols (default=no)])], , [AC_DEFINE(UNSTRICT_SYNTAX, 1, [Define to be lazy on protocol syntax])])
 
 AH_VERBATIM([CONFIG_H_FIRST], [/* Check for Linux's /usr/include/features.h
  */
@@ -155,6 +157,16 @@ AC_CHECK_HEADERS(fcntl.h unistd.h ctype.h sys/types.h sys/stat.h sys/mman.h limi
 AC_CHECK_HEADERS(netdb.h netinet/in.h sys/socket.h)
 AC_CHECK_HEADERS(sys/param.h sys/select.h inttypes.h)
 AC_CHECK_HEADERS(arpa/inet.h winsock2.h)
+
+
+AC_ARG_WITH([poll], use poll intead of select, use_poll=yes, use_poll=no)
+
+if test "x$use_poll" = "xyes"; then
+  AC_CHECK_HEADERS(sys/poll.h, [AC_DEFINE([USE_POLL], 1, [use poll instead of select])])
+else
+  echo "poll using is off"
+fi
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 
@@ -186,7 +198,7 @@ if test "x$has_getoptlong" = "xyes"; then
 fi
 
 dnl OpenSSL -- very primitive right now
-AC_ARG_WITH(openssl,   [  --with-openssl[=DIR]    include OpenSSL support (default=auto)],
+AC_ARG_WITH(openssl, [AC_HELP_STRING([--with-openssl[=DIR]], [include OpenSSL support (default=auto)])],
             [], [with_openssl=yes])
 if test "x$with_openssl" != "xno"; then
   OCPPFLAGS="$CPPFLAGS"
@@ -200,7 +212,7 @@ if test "x$with_openssl" != "xno"; then
   AC_CHECK_HEADER(openssl/ssl.h, [
    AC_CHECK_LIB(rsaref, main, [SSLLIBS="-lrsaref"])
    AC_CHECK_LIB(crypto, main, [SSLLIBS="-lcrypto $SSLLIBS"], [], [$SSLLIBS])
-   AC_CHECK_LIB(ssl, SSL_library_init, with_openssl=yes, [], [$SSLLIBS])])
+   AC_CHECK_LIB(ssl, SSL_CTX_new, with_openssl=yes, [], [$SSLLIBS])])
   if test "x$with_openssl" != "xyes"; then
     CPPFLAGS="$OCPPFLAGS"
     LDFLAGS="$OLDFLAGS"
@@ -217,7 +229,7 @@ fi
 AC_SUBST(SSLLIBS)
 
 dnl GNUTLS
-AC_ARG_WITH(gnutls,    [ --with-gnutls[=DIR]      include GnuTLS support (default=auto)],
+AC_ARG_WITH(gnutls, [AC_HELP_STRING([--with-gnutls[=DIR]], [include GnuTLS support (default=auto)])],
             [], [with_gnutls=no])
 if test "x$with_gnutls" != "xno"; then
   OCPPFLAGS="$CPPFLAGS"
@@ -255,8 +267,7 @@ fi
 dnl iconv
 LIBICONV=""
 
-AC_ARG_ENABLE(iconv,
-	[ --disable-iconv	make a version not using iconv],
+AC_ARG_ENABLE(iconv, [AC_HELP_STRING([--disable-iconv], [make a version not using iconv])],
 		enable_iconv=no, enable_iconv=yes)
 if test x$enable_iconv = xyes; then
    dnl get prototype
@@ -343,7 +354,7 @@ DBVERS=0
 DBLINKED=0
 DBLIB=""
 
-AC_ARG_ENABLE(db,   [  --disable-db            disable Berkeley DB (default=try to detect DB)],[enable_db=$enableval],[enable_db=yes])
+AC_ARG_ENABLE(db, [AC_HELP_STRING([--disable-db], [disable Berkeley DB (default=try to detect DB)])],[enable_db=$enableval],[enable_db=yes])
 
 dnl Check for a presence of Berkeley DB header
 if test "x$enable_db" != "xyes"; then
@@ -386,7 +397,7 @@ dnl Look for db3 or superior with db_create call
   case "$DBVERS" in
     3)
     AC_MSG_RESULT([version 3.x or above])
-    for lib in db-5.3 db-5.1 db-5.0 db-4.8 db-4.7 db-4.6 db-4.5 db-4.4 db-4.3 db-4.2 db-4.1 db-4.0 db-4 db4 db-3.2 db-3 db3 db; do
+    for lib in db-6.0 db-5.3 db-5.1 db-5.0 db-4.8 db-4.7 db-4.6 db-4.5 db-4.4 db-4.3 db-4.2 db-4.1 db-4.0 db-4 db4 db-3.2 db-3 db3 db; do
       if test "x$DBLINKED" = "x0"; then
 dnl        AC_CHECK_LIB($lib, db_create, [DBLIB="-l$lib"; DBLINKED=1], [])
 dnl installations of libdb4 function names are defined in db.h
@@ -439,8 +450,8 @@ AC_DEFINE_UNQUOTED(DBVERS, $DBVERS,
 AC_SUBST(DBLIB)
 
 dnl Threading support, if enabled
-AC_ARG_ENABLE(threads,  [  --disable-threads        do not include multithreading support using pthread],,[enable_threads=yes])
-AC_ARG_ENABLE(windows-threads,  [  --enable-windows-threads        include multithreading support using windows threads],[enable_windows_threads=yes],)
+AC_ARG_ENABLE(threads, [AC_HELP_STRING([--disable-threads], [do not include multithreading support using pthread])],,[enable_threads=yes])
+AC_ARG_ENABLE(windows-threads, [AC_HELP_STRING([--enable-windows-threads], [include multithreading support using windows threads])],[enable_windows_threads=yes],)
 
 if test "x$enable_windows_threads" = "xyes"; then
   AC_CHECK_HEADERS(pthread.h, [], [])
@@ -496,7 +507,7 @@ AC_SUBST(LIBSUFFIX)
 AC_SUBST(REENTRANT)
 
 dnl liblockfile on debian systems
-AC_ARG_ENABLE(lockfile,  [  --disable-lockfile      do not use liblockfile for locking mailboxes])
+AC_ARG_ENABLE(lockfile, [AC_HELP_STRING([--disable-lockfile], [do not use liblockfile for locking mailboxes])])
 if test "x$enable_lockfile" != "xno"; then
   AC_CHECK_LIB(lockfile, lockfile_create,, [
     if test "x$enable_lockfile" = "xyes"; then
@@ -508,11 +519,14 @@ AC_DEFINE_UNQUOTED(LIBETPAN_VERSION_MAJOR, $VERSION_MAJOR,
   [Define this to the major version of libEtPan])
 AC_DEFINE_UNQUOTED(LIBETPAN_VERSION_MINOR, $VERSION_MINOR,
   [Define this to the minor version of libEtPan])
+AC_DEFINE_UNQUOTED(LIBETPAN_VERSION_MICRO, $VERSION_MICRO,
+  [Define this to the micro version of libEtPan])
 AC_SUBST(VERSION_MAJOR)
 AC_SUBST(VERSION_MINOR)
+AC_SUBST(VERSION_MICRO)
 
 dnl Cyrus SASL
-AC_ARG_WITH(sasl,   [  --with-sasl[=DIR]    include SASL support (default=auto)],
+AC_ARG_WITH(sasl, [AC_HELP_STRING([--with-sasl[=DIR]], [include SASL support (default=auto)])],
             [], [with_sasl=yes])
 if test "x$with_sasl" != "xno"; then
   OCPPFLAGS="$CPPFLAGS"
@@ -564,8 +578,10 @@ if test "x$enable_ipv6" != "xno"; then
     dnl check for getaddrinfo and freeaddrinfo function presence
     for func in "getaddrinfo" "freeaddrinfo"; do
       AC_MSG_CHECKING([for $func])
-      AC_TRY_LINK([], [$func();], 
-                      [func_present=yes], 
+      AC_TRY_LINK([#include <sys/socket.h>
+                   #include <netdb.h>],
+                      [(void)$func;],
+                      [func_present=yes],
                       [func_present=no])
       AC_MSG_RESULT($func_present)
 
@@ -579,9 +595,9 @@ fi
 dnl libcurl
 
 libcurl=no
-AC_ARG_WITH(curl,   [  --with-curl[=DIR]    curl install directory (default=auto)],
+AC_ARG_WITH(curl, [AC_HELP_STRING([--with-curl[=DIR]], [curl install directory (default=auto)])],
             [], [with_curl=auto])
-if test "x$with_curl" != "xno"; then
+if test "x$with_curl" = "xno"; then
   :
 elif test "x$with_curl" != "xauto"; then
   OCPPFLAGS="$CPPFLAGS"
@@ -637,9 +653,9 @@ fi
 
 dnl expat
 libexpat=no
-AC_ARG_WITH(expat,   [  --with-expat[=DIR]    expat install directory (default=auto)],
+AC_ARG_WITH(expat, [AC_HELP_STRING([--with-expat[=DIR]], [expat install directory (default=auto)])],
             [], [with_expat=auto])
-if test "x$with_expat" != "xno"; then
+if test "x$with_expat" = "xno"; then
 	:
 elif test "x$with_expat" != "xauto"; then
   OCPPFLAGS="$CPPFLAGS"
@@ -717,7 +733,7 @@ AS_IF([test "$with_zlib" != no], [
 AM_CONDITIONAL([HAVE_ZLIB], [test $HAVE_ZLIB = 1])
 
 dnl Version
-VERSION="$VERSION_MAJOR.$VERSION_MINOR"
+VERSION="$VERSION_MAJOR.$VERSION_MINOR.$VERSION_MICRO"
 test -d .git && VERSION="$VERSION-dev-"`date +'%Y%m%d'`
 AC_DEFINE_UNQUOTED(LIBETPAN_VERSION, "$VERSION",
   [Define this to the version of libEtPan])

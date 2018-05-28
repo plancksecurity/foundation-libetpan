@@ -60,7 +60,9 @@
 #define SERVICE_NAME_IMAP "imap2"
 #define SERVICE_TYPE_TCP "tcp"
 
+#if HAVE_CFNETWORK
 static int mailimap_cfsocket_connect_voip(mailimap * f, const char * server, uint16_t port, int voip_enabled);
+#endif
 
 LIBETPAN_EXPORT
 int mailimap_socket_connect_voip(mailimap * f, const char * server, uint16_t port, int voip_enabled)
@@ -151,6 +153,7 @@ int mailimap_socket_starttls_with_callback(mailimap * f,
   return MAILIMAP_NO_ERROR;
 }
 
+#if HAVE_CFNETWORK
 static int mailimap_cfsocket_connect_voip(mailimap * f, const char * server, uint16_t port, int voip_enabled)
 {
   mailstream * stream;
@@ -162,6 +165,7 @@ static int mailimap_cfsocket_connect_voip(mailimap * f, const char * server, uin
   
   return mailimap_connect(f, stream);
 }
+#endif
 
 static int mailimap_cfsocket_starttls(mailimap * f)
 {

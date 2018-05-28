@@ -56,8 +56,11 @@
 #	include <netdb.h>
 #	include <netinet/in.h>
 #	include <sys/socket.h>
+#	ifdef HAVE_SYS_POLL_H
+#		include <sys/poll.h>
+#	endif
 #	include <unistd.h>
-#       include <arpa/inet.h>
+#	include <arpa/inet.h>
 #endif
 
 #include "syscall_wrappers.h"
@@ -110,7 +113,11 @@ static int verify_sock_errors(int s)
 
 static int wait_connect(int s, int r, time_t timeout_seconds)
 {
+#if defined(WIN32) || !USE_POLL
   fd_set fds;
+#else
+  struct pollfd pfd;
+#endif // WIN32
   struct timeval timeout;
   
   if (r == 0) {
@@ -126,8 +133,6 @@ static int wait_connect(int s, int r, time_t timeout_seconds)
     }
   }
   
-  FD_ZERO(&fds);
-  FD_SET(s, &fds);
   if (timeout_seconds == 0) {
 		timeout = mailstream_network_delay;
 	}
@@ -135,6 +140,10 @@ static int wait_connect(int s, int r, time_t timeout_seconds)
 		timeout.tv_sec = timeout_seconds;
 		timeout.tv_usec = 0;
 	}
+  
+#if defined(WIN32) || !USE_POLL
+  FD_ZERO(&fds);
+  FD_SET(s, &fds);
   /* TODO: how to cancel this ? -> could be cancelled using a cancel fd */
     // answer: see man 3 signal
 
@@ -147,7 +156,21 @@ static int wait_connect(int s, int r, time_t timeout_seconds)
     /* though, it's strange */
     return -1;
   }
+#else
+  pfd.fd = s;
+  pfd.events = POLLOUT;
+  pfd.revents = 0;
   
+  r = poll(&pfd, 1, timeout.tv_sec * 1000 + timeout.tv_usec / 1000);
+  if (r <= 0) {
+    return -1;
+  }
+  
+  if (pfd.revents & POLLOUT != POLLOUT) {
+    return -1;
+  }
+#endif
+
   return 0;
 }
 
@@ -167,6 +190,38 @@ int mail_tcp_connect_with_local_address(const char * server, uint16_t port,
 	return mail_tcp_connect_with_local_address_timeout(server, port, local_address, local_port, 0);
 }
 
+#ifndef WIN32
+#include <sys/un.h>
+int mail_unix_connect_socket(const char *path)
+{
+ struct sockaddr_un sa;
+ int s;
+
+ if (sizeof(sa.sun_path) <= strlen(path)) {
+    return -1;
+ }
+
+ if (!(memcpy(sa.sun_path, path, sizeof(sa.sun_path)))) {
+    return -1;
+ }
+ sa.sun_family = AF_UNIX;
+
+
+ if (0 > (s = socket(AF_UNIX, SOCK_STREAM, 0)))
+    return -1;
+
+ if (prepare_fd(s))
+    goto close_socket;
+ if (connect(s, (struct sockaddr *) &sa, sizeof(struct sockaddr_un)))
+    goto close_socket;
+ return s;
+
+close_socket:
+ Close(s);
+ return -1;
+}
+#endif
+
 int mail_tcp_connect_with_local_address_timeout(const char * server, uint16_t port,
     const char * local_address, uint16_t local_port, time_t timeout)
 {
@@ -184,6 +239,9 @@ int mail_tcp_connect_with_local_address_timeout(const char * server, uint16_t po
 #else
   int s;
   int r;
+
+  if ('/' == server[0])
+    return mail_unix_connect_socket(server);
 #endif
 
 #ifndef HAVE_IPV6

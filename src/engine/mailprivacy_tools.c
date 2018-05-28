@@ -37,6 +37,10 @@
 #	include <config.h>
 #endif
 
+#if __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 #include "mailprivacy_tools.h"
 #include "mailprivacy_tools_private.h"
 
@@ -515,7 +519,6 @@ mailprivacy_new_file_part(struct mailprivacy * privacy,
     char * default_content_type, int default_encoding)
 {
   char basename_buf[PATH_MAX];
-  char * name;
   struct mailmime_mechanism * encoding;
   struct mailmime_content * content;
   struct mailmime * mime;
@@ -528,10 +531,7 @@ mailprivacy_new_file_part(struct mailprivacy * privacy,
   
   if (filename != NULL) {
     strncpy(basename_buf, filename, PATH_MAX);
-    name = libetpan_basename(basename_buf);
-  }
-  else {
-    name = NULL;
+    libetpan_basename(basename_buf);
   }
   
   encoding = NULL;
@@ -1537,7 +1537,7 @@ int mailprivacy_spawn_and_wait(char * command, char * passphrase,
       // called again
       status = system(command);
 #endif
-      
+  
       exit(WEXITSTATUS(status));
     }
     break;

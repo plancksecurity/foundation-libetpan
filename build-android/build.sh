@@ -45,6 +45,7 @@ mkdir -p "$current_dir/third-party"
 cd "$current_dir/third-party"
 # unzip -qo "$current_dir/dependencies/openssl/openssl-android-$openssl_build_version.zip"
 # unzip -qo "$current_dir/dependencies/cyrus-sasl/cyrus-sasl-android-$cyrus_sasl_build_version.zip"
+# unzip -qo "$current_dir/dependencies/iconv/iconv-android-$iconv_build_version.zip"
 
 cd "$current_dir/.."
 tar xzf "$current_dir/../build-mac/autogen-result.tar.gz"

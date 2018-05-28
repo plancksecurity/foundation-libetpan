@@ -68,9 +68,15 @@
 #else
 #	include <sys/time.h>
 #	include <sys/types.h>
-#	ifdef HAVE_SYS_SELECT_H
-#		include <sys/select.h>
-#	endif
+#   if USE_POLL
+#       ifdef HAVE_SYS_POLL_H
+#	        include <sys/poll.h>
+#       endif
+#   else 
+#       ifdef HAVE_SELECT_H
+#	        include <sys/select.h>
+#       endif
+#   endif
 #endif
 
 #if LIBETPAN_IOS_DISABLE_SSL
@@ -315,20 +321,24 @@ static inline int mailstream_prepare_fd(int fd)
 
 static int wait_SSL_connect(int s, int want_read, time_t timeout_seconds)
 {
-  fd_set fds;
   struct timeval timeout;
   int r;
-  
-  FD_ZERO(&fds);
-  FD_SET(s, &fds);
+#if defined(WIN32) || !USE_POLL
+  fd_set fds;
+#else
+  struct pollfd pfd;
+#endif // WIN32
+
   if (timeout_seconds == 0) {
     timeout = mailstream_network_delay;
   }
   else {
-	timeout.tv_sec = timeout_seconds;
+    timeout.tv_sec = timeout_seconds;
     timeout.tv_usec = 0;
   }
-
+#if defined(WIN32) || !USE_POLL
+  FD_ZERO(&fds);
+  FD_SET(s, &fds);
   /* TODO: how to cancel this ? */
   // see man 3 signal
 
@@ -340,11 +350,27 @@ static int wait_SSL_connect(int s, int want_read, time_t timeout_seconds)
   if (r <= 0) {
     return -1;
   }
-  
   if (!FD_ISSET(s, &fds)) {
     /* though, it's strange */
     return -1;
   }
+#else
+  pfd.fd = s;
+  if (want_read) {
+    pfd.events = POLLIN;
+  }
+  else {
+    pfd.events = POLLOUT;
+  }
+  r = poll(&pfd, 1, timeout.tv_sec * 1000 + timeout.tv_usec / 1000);
+  if (r <= 0) {
+    return -1;
+  }
+
+  if (pfd.revents & pfd.events != pfd.events) {
+    return -1;
+  }
+#endif
   
   return 0;
 }
@@ -502,13 +528,19 @@ again:
 static struct mailstream_ssl_data * ssl_data_new(int fd, time_t timeout,
 	void (* callback)(struct mailstream_ssl_context * ssl_context, void * cb_data), void * cb_data)
 {
-  return ssl_data_new_full(fd, timeout, SSLv23_client_method(), callback, cb_data);
-}
-
-static struct mailstream_ssl_data * tls_data_new(int fd, time_t timeout,
-  void (* callback)(struct mailstream_ssl_context * ssl_context, void * cb_data), void * cb_data)
-{
-  return ssl_data_new_full(fd, timeout, TLSv1_client_method(), callback, cb_data);
+  return ssl_data_new_full(fd, timeout,
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+		TLS_client_method(),
+#else
+	/* Despite their name the SSLv23_*method() functions have nothing to do
+	 * with the availability of SSLv2 or SSLv3. What these functions do is
+	 * negotiate with the peer the highest available SSL/TLS protocol version
+	 * available. The name is as it is for historic reasons. This is a very
+	 * common confusion and is the main reason why these names have been
+	 * deprecated in the latest dev version of OpenSSL. */
+		SSLv23_client_method(),
+#endif
+		callback, cb_data);
 }
 
 #else
@@ -642,11 +674,6 @@ static struct mailstream_ssl_data * ssl_data_new(int fd, time_t timeout,
  err:
   return NULL;
 }
-static struct mailstream_ssl_data * tls_data_new(int fd, time_t timeout,
-  void (* callback)(struct mailstream_ssl_context * ssl_context, void * cb_data), void * cb_data)
-{
-  return ssl_data_new(fd, timeout, callback, cb_data);
-}
 #endif
 
 static void  ssl_data_free(struct mailstream_ssl_data * ssl_data)
@@ -698,10 +725,7 @@ static mailstream_low * mailstream_low_ssl_open_full(int fd, int starttls, time_
   mailstream_low * s;
   struct mailstream_ssl_data * ssl_data;
 
-  if (starttls)
-    ssl_data = tls_data_new(fd, timeout, callback, cb_data);
-  else
-    ssl_data = ssl_data_new(fd, timeout, callback, cb_data);
+  ssl_data = ssl_data_new(fd, timeout, callback, cb_data);
 
   if (ssl_data == NULL)
     goto err;
@@ -774,16 +798,19 @@ static int mailstream_low_ssl_get_fd(mailstream_low * s)
 
 static int wait_read(mailstream_low * s)
 {
-  fd_set fds_read;
   struct timeval timeout;
-  int fd;
+  int cancellation_fd;
   struct mailstream_ssl_data * ssl_data;
-  int max_fd;
   int r;
   int cancelled;
-  int got_data;
-#ifdef WIN32
+#if defined(WIN32)
+  fd_set fds_read;
   HANDLE event;
+#elif USE_POLL
+  struct pollfd pfd[2];
+#else
+  fd_set fds_read;
+  int max_fd;
 #endif
 
   ssl_data = (struct mailstream_ssl_data *) s->data;
@@ -800,35 +827,46 @@ static int wait_read(mailstream_low * s)
     return 0;
 #endif
 
+  cancellation_fd = mailstream_cancel_get_fd(ssl_data->cancel);
+#if defined(WIN32)
   FD_ZERO(&fds_read);
-  fd = mailstream_cancel_get_fd(ssl_data->cancel);
-  FD_SET(fd, &fds_read);
-#ifdef WIN32
+  FD_SET(cancellation_fd, &fds_read);
   event = CreateEvent(NULL, TRUE, FALSE, NULL);
   WSAEventSelect(ssl_data->fd, event, FD_READ | FD_CLOSE);
   FD_SET(event, &fds_read);
   r = WaitForMultipleObjects(fds_read.fd_count, fds_read.fd_array, FALSE, timeout.tv_sec * 1000 + timeout.tv_usec / 1000);
   if (WAIT_TIMEOUT == r) {
-		WSAEventSelect(ssl_data->fd, event, 0);
-		CloseHandle(event);
+    WSAEventSelect(ssl_data->fd, event, 0);
+    CloseHandle(event);
     return -1;
-	}
+  }
   
-  cancelled = (fds_read.fd_array[r - WAIT_OBJECT_0] == fd);
-  got_data = (fds_read.fd_array[r - WAIT_OBJECT_0] == event);
-	WSAEventSelect(ssl_data->fd, event, 0);
-	CloseHandle(event);
-#else
-  FD_SET(ssl_data->fd, &fds_read);
-  max_fd = ssl_data->fd;
-  if (fd > max_fd)
-    max_fd = fd;
-  r = Select(max_fd + 1, &fds_read, NULL, NULL, &timeout);
+  cancelled = (fds_read.fd_array[r - WAIT_OBJECT_0] == cancellation_fd);
+  WSAEventSelect(ssl_data->fd, event, 0);
+  CloseHandle(event);
+#elif USE_POLL
+  pfd[0].fd = ssl_data->fd;
+  pfd[0].events = POLLIN;
+  pfd[0].revents = 0;
+
+  pfd[1].fd = cancellation_fd;
+  pfd[1].events = POLLIN;
+  pfd[1].revents = 0;
+
+  r = poll(&pfd[0], 2, timeout.tv_sec * 1000 + timeout.tv_usec / 1000);
   if (r <= 0)
     return -1;
   
-  cancelled = (FD_ISSET(fd, &fds_read));
-  got_data = FD_ISSET(ssl_data->fd, &fds_read);
+  cancelled = pfd[1].revents & POLLIN;
+#else
+  FD_ZERO(&fds_read);
+  FD_SET(cancellation_fd, &fds_read);
+  FD_SET(ssl_data->fd, &fds_read);
+  max_fd = cancellation_fd > ssl_data->fd ? cancellation_fd : ssl_data->fd;
+  r = Select(max_fd + 1, &fds_read, NULL, NULL, &timeout);
+  if (r <= 0)
+      return -1;
+  cancelled = FD_ISSET(cancellation_fd, &fds_read);
 #endif
   if (cancelled) {
     /* cancelled */
@@ -918,17 +956,22 @@ static ssize_t mailstream_low_ssl_read(mailstream_low * s,
 
 static int wait_write(mailstream_low * s)
 {
-  fd_set fds_read;
-  fd_set fds_write;
   struct timeval timeout;
   int r;
-  int fd;
+  int cancellation_fd;
   struct mailstream_ssl_data * ssl_data;
-  int max_fd;
   int cancelled;
   int write_enabled;
-#ifdef WIN32
+#if defined(WIN32)
+  fd_set fds_read;
+  fd_set fds_write;
   HANDLE event;
+#elif USE_POLL
+  struct pollfd pfd[2];
+#else
+  fd_set fds_read;
+  fd_set fds_write;
+  int max_fd;
 #endif
   
   ssl_data = (struct mailstream_ssl_data *) s->data;
@@ -943,11 +986,11 @@ static int wait_write(mailstream_low * s)
     timeout.tv_usec = 0;
   }
   
+  cancellation_fd = mailstream_cancel_get_fd(ssl_data->cancel);
+#if defined(WIN32)
   FD_ZERO(&fds_read);
-  fd = mailstream_cancel_get_fd(ssl_data->cancel);
-  FD_SET(fd, &fds_read);
   FD_ZERO(&fds_write);
-#ifdef WIN32
+  FD_SET(cancellation_fd, &fds_read);
   event = CreateEvent(NULL, TRUE, FALSE, NULL);
   WSAEventSelect(ssl_data->fd, event, FD_WRITE | FD_CLOSE);
   FD_SET(event, &fds_read);
@@ -958,22 +1001,37 @@ static int wait_write(mailstream_low * s)
     return -1;
 	}
   
-  cancelled = (fds_read.fd_array[r - WAIT_OBJECT_0] == fd) /* SEB 20070709 */;
+  cancelled = (fds_read.fd_array[r - WAIT_OBJECT_0] == cancellation_fd) /* SEB 20070709 */;
   write_enabled = (fds_read.fd_array[r - WAIT_OBJECT_0] == event);
 	WSAEventSelect(ssl_data->fd, event, 0);
 	CloseHandle(event);
+#elif USE_POLL
+  pfd[0].fd = ssl_data->fd;
+  pfd[0].events = POLLOUT;
+  pfd[0].revents = 0;
+
+  pfd[1].fd = cancellation_fd;
+  pfd[1].events = POLLIN;
+  pfd[1].revents = 0;
+
+  r = poll(&pfd[0], 2, timeout.tv_sec * 1000 + timeout.tv_usec / 1000);
+  if (r <= 0)
+    return -1;
+ 
+  cancelled = pfd[1].revents & POLLIN;
+  write_enabled = pfd[0].revents & POLLOUT;
 #else
+  FD_ZERO(&fds_read);
+  FD_ZERO(&fds_write);
+  FD_SET(cancellation_fd, &fds_read);
   FD_SET(ssl_data->fd, &fds_write);
   
-  max_fd = ssl_data->fd;
-  if (fd > max_fd)
-    max_fd = fd;
-  
+  max_fd = cancellation_fd > ssl_data->fd ? cancellation_fd : ssl_data->fd;
   r = Select(max_fd + 1, &fds_read, &fds_write, NULL, &timeout);
   if (r <= 0)
     return -1;
-  
-  cancelled = FD_ISSET(fd, &fds_read);
+
+  cancelled = FD_ISSET(cancellation_fd, &fds_read);
   write_enabled = FD_ISSET(ssl_data->fd, &fds_write);
 #endif
   

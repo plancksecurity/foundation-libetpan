@@ -1,7 +1,7 @@
 /*
  * libEtPan! -- a mail stuff library
  *
- * Copyright (C) 2001, 2013 - DINH Viet Hoa
+ * Copyright (C) 2001, 2015 - DINH Viet Hoa
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,44 +29,17 @@
  * SUCH DAMAGE.
  */
 
-/*  Created by Ian Ragsdale on 3/8/13. */
+#ifndef MD5NAMESPACE_H
 
-#ifndef MAILSTREAM_COMPRESS_H
-#define MAILSTREAM_COMPRESS_H
+#define MD5NAMESPACE_H
 
-#define USE_DEFLATE 1
+#define MD5Init lep_MD5Init
+#define MD5Update lep_MD5Update
+#define MD5Final lep_MD5Final
+#define hmac_md5 lep_hmac_md5
+#define hmac_md5_init lep_hmac_md5_init
+#define hmac_md5_precalc lep_hmac_md5_precalc
+#define hmac_md5_import lep_hmac_md5_import
+#define hmac_md5_final lep_hmac_md5_final
 
-#include <libetpan/mailstream.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-    
-extern mailstream_low_driver * mailstream_compress_driver;
-
-struct mailstream_compress_context;
-
-/* exported methods */
-LIBETPAN_EXPORT
-mailstream_low * mailstream_low_compress_open(mailstream_low * ms);
-
-LIBETPAN_EXPORT
-int mailstream_low_compress_wait_idle(mailstream_low * low,
-                                      struct mailstream_cancel * idle,
-                                      int max_idle_delay);
-
-  /*
-LIBETPAN_EXPORT
-int mailstream_low_compress_setup_idle(mailstream_low * low);
-
-LIBETPAN_EXPORT
-int mailstream_low_compress_unsetup_idle(mailstream_low * low);
-
-LIBETPAN_EXPORT
-int mailstream_low_compress_interrupt_idle(mailstream_low * low);
-*/
-  
-#ifdef __cplusplus
-}
-#endif
 #endif

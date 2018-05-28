@@ -44,7 +44,7 @@ enum {
 
 static int
 mailimap_xlist_extension_parse(int calling_parser, mailstream * fd,
-                               MMAPString * buffer, size_t * indx,
+                               MMAPString * buffer, struct mailimap_parser_context * parser_ctx, size_t * indx,
                                struct mailimap_extension_data ** result,
                                size_t progr_rate, progress_function * progr_fun);
 
@@ -151,8 +151,15 @@ int mailimap_xlist(mailimap * session, const char * mb,
     ext_data->ext_data = NULL;
   }
   
-  * result = result_list;
+  if (clist_isempty(result_list) && !clist_isempty(session->imap_response_info->rsp_mailbox_list)) {
+    // workaround, if server makes LIST-like response, example: cyon.ch
+    clist_free(result_list);
+    result_list = session->imap_response_info->rsp_mailbox_list;
+    session->imap_response_info->rsp_mailbox_list = NULL;
+  }
   
+  * result = result_list;
+
   error_code = response->rsp_resp_done->rsp_data.rsp_tagged->rsp_cond_state->rsp_type;
   
   mailimap_response_free(response);
@@ -175,12 +182,12 @@ free_list:
   clist_free(result_list);
 free_response:
   mailimap_response_free(response);
-err:
+
   return res;
 }
 
 static int
-mailimap_mailbox_data_xlist_parse(mailstream * fd, MMAPString * buffer,
+mailimap_mailbox_data_xlist_parse(mailstream * fd, MMAPString * buffer, struct mailimap_parser_context * parser_ctx,
                                   size_t * indx,
                                   struct mailimap_mailbox_list ** result,
                                   size_t progr_rate,
@@ -189,26 +196,22 @@ mailimap_mailbox_data_xlist_parse(mailstream * fd, MMAPString * buffer,
   size_t cur_token;
   struct mailimap_mailbox_list * mb_list;
   int r;
-  int res;
   
   cur_token = * indx;
   
   r = mailimap_token_case_insensitive_parse(fd, buffer, &cur_token, "XLIST");
   if (r != MAILIMAP_NO_ERROR) {
-    res = r;
     return r;
   }
   
   r = mailimap_space_parse(fd, buffer, &cur_token);
   if (r != MAILIMAP_NO_ERROR) {
-    res = r;
     return r;
   }
   
-  r = mailimap_mailbox_list_parse(fd, buffer, &cur_token, &mb_list,
+  r = mailimap_mailbox_list_parse(fd, buffer, parser_ctx, &cur_token, &mb_list,
                                   progr_rate, progr_fun);
   if (r != MAILIMAP_NO_ERROR) {
-    res = r;
     return r;
   }
   
@@ -220,7 +223,7 @@ mailimap_mailbox_data_xlist_parse(mailstream * fd, MMAPString * buffer,
 
 static int
 mailimap_xlist_extension_parse(int calling_parser, mailstream * fd,
-                               MMAPString * buffer, size_t * indx,
+                               MMAPString * buffer, struct mailimap_parser_context * parser_ctx, size_t * indx,
                                struct mailimap_extension_data ** result,
                                size_t progr_rate, progress_function * progr_fun)
 {
@@ -236,7 +239,7 @@ mailimap_xlist_extension_parse(int calling_parser, mailstream * fd,
   switch (calling_parser)
   {
     case MAILIMAP_EXTENDED_PARSER_RESPONSE_DATA:
-      r = mailimap_mailbox_data_xlist_parse(fd, buffer, &cur_token,
+      r = mailimap_mailbox_data_xlist_parse(fd, buffer, parser_ctx, &cur_token,
                                             &xlist_data, progr_rate, progr_fun);
       if (r == MAILIMAP_NO_ERROR) {
         type = MAILIMAP_XLIST_TYPE_XLIST;

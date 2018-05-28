@@ -460,6 +460,19 @@ mailstream_low * mailstream_low_cfstream_open_voip(const char * hostname, int16_
 	return mailstream_low_cfstream_open_voip_timeout(hostname, port, voip_enabled, 0);
 }
 
+#if HAVE_CFNETWORK
+static int numberIntValue(CFNumberRef nb)
+{
+  if (nb == NULL) {
+    return 0;
+  }
+
+  int result;
+  CFNumberGetValue(nb, kCFNumberIntType, &result);
+  return result;
+}
+#endif
+
 mailstream_low * mailstream_low_cfstream_open_voip_timeout(const char * hostname, int16_t port,
   int voip_enabled, time_t timeout)
 {
@@ -483,7 +496,17 @@ mailstream_low * mailstream_low_cfstream_open_voip_timeout(const char * hostname
     CFWriteStreamSetProperty(writeStream, kCFStreamNetworkServiceType, kCFStreamNetworkServiceTypeVoIP);
   }
 #endif
-  
+
+#if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+  CFDictionaryRef proxySettings = CFNetworkCopySystemProxySettings();
+  CFNumberRef nbEnabled = CFDictionaryGetValue(proxySettings, kCFNetworkProxiesSOCKSEnable);
+  if (numberIntValue(nbEnabled)) {
+    CFReadStreamSetProperty(readStream, kCFStreamPropertySOCKSProxy, proxySettings);
+    CFWriteStreamSetProperty(writeStream, kCFStreamPropertySOCKSProxy, proxySettings);
+  }
+  CFRelease(proxySettings);
+#endif
+
   cfstream_data = cfstream_data_new(readStream, writeStream);
   s = mailstream_low_new(cfstream_data, mailstream_cfstream_driver);
 	mailstream_low_set_timeout(s, timeout);  
@@ -823,6 +846,10 @@ static ssize_t mailstream_low_cfstream_read(mailstream_low * s,
   if (cfstream_data->cancelled) {
     return -1;
   }
+ 
+  if (CFReadStreamGetStatus(cfstream_data->readStream) == kCFStreamStatusError) {
+    return -1;
+  }
   
   if (CFReadStreamHasBytesAvailable(cfstream_data->readStream)) {
     readDataFromStream(s);
@@ -853,6 +880,10 @@ static ssize_t mailstream_low_cfstream_write(mailstream_low * s,
   
   if (cfstream_data->cancelled)
     return -1;
+  
+  if (CFWriteStreamGetStatus(cfstream_data->writeStream) == kCFStreamStatusError) {
+    return -1;
+  }
   
   if (CFWriteStreamCanAcceptBytes(cfstream_data->writeStream)) {
     writeDataToStream(s);

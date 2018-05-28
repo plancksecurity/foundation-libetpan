@@ -241,6 +241,42 @@ int mailimap_uid_copy(mailimap * session,
     struct mailimap_set * set, const char * mb);
 
 /*
+   mailimap_move()
+
+   This function will move the given messages from the selected mailbox
+   to the given mailbox. 
+
+   @param session IMAP session
+   @param set     This is a set of message numbers.
+   @param mb      This is the destination mailbox.
+
+   @return the return code is one of MAILIMAP_ERROR_XXX or
+     MAILIMAP_NO_ERROR codes
+ */
+
+LIBETPAN_EXPORT
+int mailimap_move(mailimap * session, struct mailimap_set * set,
+                  const char * mb);
+
+/*
+   mailimap_uid_move()
+
+   This function will move the given messages from the selected mailbox
+   to the given mailbox. 
+
+   @param session IMAP session
+   @param set     This is a set of message unique identifiers.
+   @param mb      This is the destination mailbox.
+
+   @return the return code is one of MAILIMAP_ERROR_XXX or
+   MAILIMAP_NO_ERROR codes
+ */
+
+LIBETPAN_EXPORT
+int mailimap_uid_move(mailimap * session, struct mailimap_set * set,
+                      const char * mb);
+
+/*
    mailimap_create()
 
    This function will create a mailbox.
@@ -561,6 +597,19 @@ int
 mailimap_select(mailimap * session, const char * mb);
 
 /*
+ mailimap_custom_command()
+ 
+ @param session   IMAP session
+ @param command   Custom IMAP command to be send
+ 
+ @return the return code is one of MAILIMAP_ERROR_XXX or
+ MAILIMAP_NO_ERROR_XXX codes
+ */
+
+LIBETPAN_EXPORT
+int mailimap_custom_command(mailimap * session, const char * command);
+  
+/*
    mailimap_status()
 
    This function will return informations about a given mailbox.
@@ -770,6 +819,24 @@ void mailimap_set_msg_att_handler(mailimap * session,
                                   void * context);
 
 /*
+    mailimap_set_msg_body_handler() set a callback when a message body is
+      downloaded using FETCH.
+
+    @param session    IMAP session
+    @param handler    set a callback function. This function will be called
+      during the download of the response to process the message body
+      as data become available from the network.
+      This can be used, for example, for downloading big messages (or it attachments)
+      to the file without keeping it in memory.
+    @param context    parameter that's passed to the callback function.
+*/
+
+LIBETPAN_EXPORT
+void mailimap_set_msg_body_handler(mailimap * session,
+                                   mailimap_msg_body_handler * handler,
+                                   void * context);
+
+/*
     mailimap_set_timeout() set the network timeout of the IMAP session.
 
     @param session    IMAP session
@@ -812,6 +879,54 @@ int mailimap_is_163_workaround_enabled(mailimap * session);
     
 LIBETPAN_EXPORT    
 void mailimap_set_163_workaround_enabled(mailimap * session, int enabled);
+
+#ifndef LIBETPAN_HAS_MAILIMAP_RAMBLER_WORKAROUND
+  #define LIBETPAN_HAS_MAILIMAP_RAMBLER_WORKAROUND	1
+#endif
+
+/*
+    Enable workaround for Rambler IMAP server.
+
+    Occasionally, for large attachments (~20MB) Rambler returns wrong length of the literal.
+    Since this workaround is not completely free from false positives, by default is is off.
+
+    It is proposed to enable it only during downloading large attachments from Rambler:
+
+    @code
+    if (encoding is (base64 or uuencode) and server is rambler.ru) {
+        mailimap_set_rambler_workaround_enabled(imap, 1);
+            … fetch part ...
+        mailimap_set_rambler_workaround_enabled(imap, 0);
+    }
+    @endcode
+*/
+
+LIBETPAN_EXPORT
+int mailimap_is_rambler_workaround_enabled(mailimap * session);
+
+LIBETPAN_EXPORT
+void mailimap_set_rambler_workaround_enabled(mailimap * session, int enabled);
+
+#ifndef LIBETPAN_HAS_MAILIMAP_QIP_WORKAROUND
+#define LIBETPAN_HAS_MAILIMAP_QIP_WORKAROUND	1
+#endif
+
+/*
+    Enable workaround for QIP IMAP server.
+
+    QIP returns invalid (?) response for storeFlags operation:
+      C: A999 UID STORE 123 +FLAGS.SILENT (\Seen)
+      S: * 6 FETCH ()
+      S: A999 OK STORE completed
+
+    Enabling this workaround allows successfully parse such responses.
+*/
+
+LIBETPAN_EXPORT
+int mailimap_is_qip_workaround_enabled(mailimap * session);
+
+LIBETPAN_EXPORT
+void mailimap_set_qip_workaround_enabled(mailimap * session, int enabled);
 
 #ifdef __cplusplus
 }

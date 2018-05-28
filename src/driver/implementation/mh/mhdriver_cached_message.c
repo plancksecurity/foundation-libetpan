@@ -187,8 +187,8 @@ static int mh_initialize(mailmessage * msg_info)
   
   mh_msg_info = data.data;
 
-  snprintf(static_uid, PATH_MAX, "%u-%lu-%lu", msg_info->msg_index,
-	   mh_msg_info->msg_mtime, (unsigned long) mh_msg_info->msg_size);
+  snprintf(static_uid, PATH_MAX, "%u-%lld-%zu", msg_info->msg_index,
+           (long long)mh_msg_info->msg_mtime, mh_msg_info->msg_size);
   uid = strdup(static_uid);
   if (uid == NULL)
     return MAIL_ERROR_MEMORY;
@@ -222,10 +222,8 @@ static void mh_flush(mailmessage * msg_info)
 
 static void mh_check(mailmessage * msg_info)
 {
-  int r;
-
   if (msg_info->msg_flags != NULL) {
-    r = mail_flags_store_set(get_cached_session_data(msg_info)->mh_flags_store,
+    mail_flags_store_set(get_cached_session_data(msg_info)->mh_flags_store,
         msg_info);
     /* ignore errors */
   }

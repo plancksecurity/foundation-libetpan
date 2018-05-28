@@ -3341,6 +3341,9 @@ enum {
 
 typedef void mailimap_msg_att_handler(struct mailimap_msg_att * msg_att, void * context);
 
+typedef bool mailimap_msg_body_handler(int msg_att_type, struct mailimap_msg_att_body_section * section,
+                                       const char * bytes, size_t length, void * context);
+
 typedef struct mailimap mailimap;
 
 struct mailimap {
@@ -3380,6 +3383,8 @@ struct mailimap {
   void * imap_progress_context;
   mailimap_msg_att_handler * imap_msg_att_handler;
   void * imap_msg_att_handler_context;
+  mailimap_msg_body_handler * imap_msg_body_handler;
+  void * imap_msg_body_handler_context;
 
   time_t imap_timeout;
   
@@ -3387,6 +3392,8 @@ struct mailimap {
   void * imap_logger_context;
   
   int is_163_workaround_enabled;
+  int is_rambler_workaround_enabled;
+  int is_qip_workaround_enabled;
 };
 
 
@@ -3538,6 +3545,8 @@ enum {
   MAILIMAP_ERROR_EXPUNGE,
   MAILIMAP_ERROR_COPY,
   MAILIMAP_ERROR_UID_COPY,
+  MAILIMAP_ERROR_MOVE,
+  MAILIMAP_ERROR_UID_MOVE,
   MAILIMAP_ERROR_CREATE,
   MAILIMAP_ERROR_DELETE,
   MAILIMAP_ERROR_EXAMINE,
@@ -3560,9 +3569,38 @@ enum {
   MAILIMAP_ERROR_EXTENSION,
   MAILIMAP_ERROR_SASL,
   MAILIMAP_ERROR_SSL,
-  MAILIMAP_ERROR_NEEDS_MORE_DATA
+  MAILIMAP_ERROR_NEEDS_MORE_DATA,
+  MAILIMAP_ERROR_CUSTOM_COMMAND
 };
 
+/* information about parser context */
+
+struct mailimap_parser_context {
+  int is_rambler_workaround_enabled;
+  int is_qip_workaround_enabled;
+
+  mailimap_msg_body_handler * msg_body_handler;
+  void * msg_body_handler_context;
+  struct mailimap_msg_att_body_section * msg_body_section;
+  int msg_body_att_type;
+  bool msg_body_parse_in_progress;
+};
+
+LIBETPAN_EXPORT
+struct mailimap_parser_context *
+mailimap_parser_context_new(mailimap * session);
+
+LIBETPAN_EXPORT
+void
+mailimap_parser_context_free(struct mailimap_parser_context * ctx);
+
+LIBETPAN_EXPORT
+int
+mailimap_parser_context_is_rambler_workaround_enabled(struct mailimap_parser_context * parser_ctx);
+
+LIBETPAN_EXPORT
+int
+mailimap_parser_context_is_qip_workaround_enabled(struct mailimap_parser_context * parser_ctx);
 
 #ifdef __cplusplus
 }

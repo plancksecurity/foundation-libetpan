@@ -41,6 +41,7 @@
 #include "mmapstring.h"
 #include "mail.h"
 #include "mailimap_extension.h"
+#include "mailimap.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -1200,8 +1201,10 @@ mailimap_flag_list_new(clist * fl_list)
 LIBETPAN_EXPORT
 void mailimap_flag_list_free(struct mailimap_flag_list * flag_list)
 {
-  clist_foreach(flag_list->fl_list, (clist_func) mailimap_flag_free, NULL);
-  clist_free(flag_list->fl_list);
+  if (flag_list->fl_list) {
+    clist_foreach(flag_list->fl_list, (clist_func) mailimap_flag_free, NULL);
+    clist_free(flag_list->fl_list);
+  }
   free(flag_list);
 }
 
@@ -3234,4 +3237,51 @@ mailimap_response_info_free(struct mailimap_response_info * resp_info)
   }
 
   free(resp_info);
+}
+
+
+LIBETPAN_EXPORT
+int
+mailimap_parser_context_is_rambler_workaround_enabled(struct mailimap_parser_context * parser_ctx)
+{
+  return parser_ctx != NULL && parser_ctx->is_rambler_workaround_enabled;
+}
+
+LIBETPAN_EXPORT
+int
+mailimap_parser_context_is_qip_workaround_enabled(struct mailimap_parser_context * parser_ctx)
+{
+  return parser_ctx != NULL && parser_ctx->is_qip_workaround_enabled;
+}
+
+LIBETPAN_EXPORT
+struct mailimap_parser_context *
+mailimap_parser_context_new(mailimap * session)
+{
+  struct mailimap_parser_context * ctx;
+
+  ctx = malloc(sizeof(* ctx));
+  if (ctx == NULL)
+    goto err;
+
+  ctx->is_rambler_workaround_enabled = mailimap_is_rambler_workaround_enabled(session);
+  ctx->is_qip_workaround_enabled = mailimap_is_qip_workaround_enabled(session);
+
+  ctx->msg_body_handler = session->imap_msg_body_handler;
+  ctx->msg_body_handler_context = session->imap_msg_body_handler_context;
+  ctx->msg_body_parse_in_progress = false;
+  ctx->msg_body_section = NULL;
+  ctx->msg_body_att_type = 0;
+
+  return ctx;
+
+err:
+  return NULL;
+}
+
+LIBETPAN_EXPORT
+void
+mailimap_parser_context_free(struct mailimap_parser_context * ctx)
+{
+  free(ctx);
 }

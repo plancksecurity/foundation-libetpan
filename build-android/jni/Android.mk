@@ -9,6 +9,11 @@ include $(CLEAR_VARS)
 # $(error CYRUS_SASL_PATH must be set)
 # endif
 
+#
+# ifeq ($(ICONV_PATH),)
+# $(error ICONV_PATH must be set)
+# endif
+
 src_files = \
 ./src/data-types/base64.c \
 ./src/data-types/carray.c \
@@ -124,6 +129,7 @@ src_files = \
 NDK_TOOLCHAIN_VERSION := clang
 LOCAL_MODULE := etpan
 LOCAL_SRC_FILES := $(addprefix ../../, $(src_files))
+#LOCAL_CFLAGS += -DHAVE_CONFIG_H=1 -DHAVE_ICONV=1
 LOCAL_CFLAGS += -DHAVE_CONFIG_H=1
 c_includes = \
 src \

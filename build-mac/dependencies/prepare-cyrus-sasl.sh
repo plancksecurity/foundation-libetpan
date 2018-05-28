@@ -2,11 +2,12 @@
 
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 
-version=2.1.25
+version=2.1.26
 ARCHIVE=cyrus-sasl-$version
 ARCHIVE_NAME=$ARCHIVE.tar.gz
 ARCHIVE_PATCH=$ARCHIVE.patch
-url=ftp://ftp.andrew.cmu.edu/pub/cyrus-mail/$ARCHIVE_NAME
+#url=ftp://ftp.andrew.cmu.edu/pub/cyrus-mail/$ARCHIVE_NAME
+url=ftp://ftp.cyrusimap.org/cyrus-sasl/$ARCHIVE_NAME
 patchfile=cyrus-2.1.25-libetpan.patch
 
 scriptdir="`pwd`"
@@ -114,6 +115,10 @@ SDK_IOS_MIN_VERSION=7.0
 SDK_IOS_VERSION="`xcodebuild -showsdks 2>/dev/null | grep iphoneos | sed 's/.*iphoneos\(.*\)/\1/'`"
 BUILD_DIR="$tmpdir/build"
 INSTALL_PATH="${BUILD_DIR}/${LIB_NAME}/universal"
+BITCODE_FLAGS="-fembed-bitcode"
+if test "x$NOBITCODE" != x ; then
+   BITCODE_FLAGS=""
+fi
 
 for TARGET in $TARGETS; do
 
@@ -125,13 +130,14 @@ for TARGET in $TARGETS; do
         (iPhoneOS) 
             ARCH=arm
             MARCHS="armv7 armv7s arm64"
+            EXTRA_FLAGS="$BITCODE_FLAGS -miphoneos-version-min=$SDK_IOS_MIN_VERSION"
             ;;
         (iPhoneSimulator)
             ARCH=i386
             MARCHS="i386 x86_64"
+            EXTRA_FLAGS="-miphoneos-version-min=$SDK_IOS_MIN_VERSION"
             ;;
     esac
-    EXTRA_FLAGS="-fembed-bitcode -miphoneos-version-min=$SDK_IOS_MIN_VERSION"
     
     for MARCH in $MARCHS; do
 				echo "building for $TARGET - $MARCH"
@@ -149,6 +155,7 @@ for TARGET in $TARGETS; do
         make -j 8 >> "$logfile" 2>&1
         if [[ "$?" != "0" ]]; then
           echo "CONFIGURE FAILED"
+          cat "$logfile"
           exit 1
         fi
         cd lib
@@ -162,6 +169,7 @@ for TARGET in $TARGETS; do
         cd ..
         if [[ "$?" != "0" ]]; then
           echo "BUILD FAILED"
+          cat "$logfile"
           exit 1
         fi
         make clean >> "$logfile" 2>&1

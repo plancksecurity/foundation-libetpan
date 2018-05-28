@@ -760,6 +760,56 @@ int mailimap_uid_copy_send(mailstream * fd,
 }
 
 /*
+ =>   move           = "MOVE" SP sequence-set SP mailbox
+ */
+
+int mailimap_move_send(mailstream * fd,
+                       struct mailimap_set * set,
+                       const char * mb)
+{
+  int r;
+
+  r = mailimap_token_send(fd, "MOVE");
+  if (r != MAILIMAP_NO_ERROR)
+    return r;
+
+  r = mailimap_space_send(fd);
+  if (r != MAILIMAP_NO_ERROR)
+    return r;
+
+  r = mailimap_set_send(fd, set);
+  if (r != MAILIMAP_NO_ERROR)
+    return r;
+
+  r = mailimap_space_send(fd);
+  if (r != MAILIMAP_NO_ERROR)
+    return r;
+
+  r = mailimap_mailbox_send(fd, mb);
+  if (r != MAILIMAP_NO_ERROR)
+    return r;
+
+  return MAILIMAP_NO_ERROR;
+}
+
+int mailimap_uid_move_send(mailstream * fd,
+                           struct mailimap_set * set,
+                           const char * mb)
+{
+  int r;
+
+  r = mailimap_token_send(fd, "UID");
+  if (r != MAILIMAP_NO_ERROR)
+    return r;
+
+  r = mailimap_space_send(fd);
+  if (r != MAILIMAP_NO_ERROR)
+    return r;
+  
+  return mailimap_move_send(fd, set, mb);
+}
+
+/*
 =>   create          = "CREATE" SP mailbox
                        ; Use of INBOX gives a NO error
 */
@@ -2604,7 +2654,7 @@ static int search_key_send(mailstream * fd,
       r = mailimap_space_send(fd);
       if (r != MAILIMAP_NO_ERROR)
         return r;
-      r = mailimap_quoted_send(fd, key->sk_data.sk_xgmraw);
+      r = mailimap_astring_literalplus_send(fd, key->sk_data.sk_xgmraw, literalplus_enabled);
       if (r != MAILIMAP_NO_ERROR)
         return r;
       return MAILIMAP_NO_ERROR;
@@ -3268,6 +3318,22 @@ int mailimap_unsubscribe_send(mailstream * fd,
 int mailimap_starttls_send(mailstream * fd)
 {
   return mailimap_token_send(fd, "STARTTLS");
+}
+
+int
+mailimap_send_custom_command(mailstream *fd, const char * command)
+{
+  int r;
+  
+  r = mailimap_token_send(fd, command);
+  if (r != MAILIMAP_NO_ERROR)
+    return r;
+  
+  r = mailimap_space_send(fd);
+  if (r != MAILIMAP_NO_ERROR)
+    return r;
+  
+  return MAILIMAP_NO_ERROR;
 }
 
 /*

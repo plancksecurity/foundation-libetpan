@@ -37,13 +37,11 @@
 #	include <config.h>
 #endif
 
-#include "mailprivacy_smime.h"
-#include <string.h>
-
 #if __APPLE__
 #include <TargetConditionals.h>
 #endif
-
+#include "mailprivacy_smime.h"
+#include <string.h>
 #ifdef WIN32
 #	include "win_etpan.h"
 #	define WEXITSTATUS(r) (r)
@@ -1535,7 +1533,6 @@ static int get_cert_from_sig(struct mailprivacy * privacy,
     struct mailmime * mime)
 {
   clistiter * cur;
-  struct mailmime * signed_mime;
   struct mailmime * signature_mime;
   int res;
   char signature_filename[PATH_MAX];
@@ -1546,13 +1543,13 @@ static int get_cert_from_sig(struct mailprivacy * privacy,
   char quoted_store_cert_filename[PATH_MAX];
   int r;
   char command[PATH_MAX];
-
+  
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
   //https://github.com/dinhviethoa/libetpan/issues/275
   //get_cert_from_sig is not needed on iOS
   return MAIL_ERROR_COMMAND;
 #endif
-
+  
   if (* cert_dir == '\0')
     return MAIL_ERROR_INVAL;
 
@@ -1572,10 +1569,9 @@ static int get_cert_from_sig(struct mailprivacy * privacy,
   cur = clist_begin(mime->mm_data.mm_multipart.mm_mp_list);
   if (cur == NULL) {
     res = MAIL_ERROR_INVAL;
-   goto err;
+    goto err;
   }
   
-  signed_mime = cur->data;
   cur = clist_next(cur);
   if (cur == NULL) {
     res = MAIL_ERROR_INVAL;
