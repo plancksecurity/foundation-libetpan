@@ -322,7 +322,6 @@ struct mailmime {
   
   struct mailmime_fields * mm_mime_fields;
   struct mailmime_content * mm_content_type;
-  struct mailimf_fields * mm_imf_fields; /* preserves the whole set of fields from a part for memoryhole */
   
   struct mailmime_data * mm_body;
   union {

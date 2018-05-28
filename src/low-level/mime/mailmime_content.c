@@ -831,7 +831,6 @@ int mailmime_multipart_next_parse(const char * message, size_t length,
   return MAILIMF_NO_ERROR;
 }
 
-/* N.B. Modified to allow add enigmail memoryhole Subject header to fields. */
 static int
 mailmime_multipart_body_parse(const char * message, size_t length,
     size_t * indx, char * boundary,
@@ -967,38 +966,25 @@ mailmime_multipart_body_parse(const char * message, size_t length,
     
     if (r == MAILIMF_NO_ERROR) {
       bp_token = 0;
-    
-      struct mailimf_fields * envelope_fields = NULL;
-
-      int is_memoryhole_part = 0;
-    
-         
-      r = mailimf_memoryhole_fields_parse(data_str, data_size,
+        
+      r = mailimf_optional_fields_parse(data_str, data_size,
           &bp_token, &fields);
-     
-      if (r == MAILIMF_NO_ERROR) {
-          is_memoryhole_part = 1;
-      }  
-      else {
-          r = mailimf_optional_fields_parse(data_str, data_size,
-              &bp_token, &fields);
-          if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
-            res = r;
-            goto free;
-          }
-          
-          r = mailimf_crlf_parse(data_str, data_size, &bp_token);
-          if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
-            mailimf_fields_free(fields);
-            res = r;
-            goto free;
-          }
-      } 
+      if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
+        res = r;
+        goto free;
+      }
+      
+      r = mailimf_crlf_parse(data_str, data_size, &bp_token);
+      if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
+        mailimf_fields_free(fields);
+        res = r;
+        goto free;
+      }
            
       mime_fields = NULL;
       r = mailmime_fields_parse(fields, &mime_fields);
       
-      /* mailimf_fields_free(fields); */ /* we don't do this now to preserve for memoryhole */
+      mailimf_fields_free(fields);
       
       if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE)) {
         res = r;
@@ -1026,8 +1012,6 @@ mailmime_multipart_body_parse(const char * message, size_t length,
         goto free;
       }
       
-      mime_bp->mm_imf_fields = fields;
-
       r = mailmime_multipart_next_parse(message, length, &cur_token);
       if (r == MAILIMF_NO_ERROR) {
         /* do nothing */
