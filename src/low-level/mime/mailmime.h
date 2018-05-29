@@ -111,6 +111,10 @@ int mailmime_language_parse(const char * message, size_t length,
 			    size_t * indx,
 			    struct mailmime_language ** result);
 
+LIBETPAN_EXPORT
+int mailmime_extended_initial_value_parse(const char * message, size_t length,
+			 size_t * indx, char ** result, char** charset, char** language);
+                                
 #ifdef __cplusplus
 }
 #endif

@@ -189,6 +189,141 @@ mailmime_composite_type_parse(const char * message, size_t length,
   return res;
 }
 
+static void 
+hex_to_byte(char* retval_byte, const char* hex_bytes) {
+    *retval_byte = 0;
+    char curr_char = hex_bytes[0];
+    
+    if (isdigit(curr_char))
+        *retval_byte |= curr_char - '0';
+    else {
+        curr_char = tolower(curr_char);
+        if (curr_char >= 'a' && curr_char <= 'f') {
+            *retval_byte |= (curr_char - 'a') + 10;
+        }
+        else {
+            *retval_byte = 0;
+            return;
+        }
+    }
+    *retval_byte <<= 4;
+
+    curr_char = hex_bytes[1];
+    
+    if (isdigit(curr_char))
+        *retval_byte |= curr_char - '0';
+    else {
+        curr_char = tolower(curr_char);
+        if (curr_char >= 'a' && curr_char <= 'f') {
+            *retval_byte |= (curr_char - 'a') + 10;
+        }
+        else {
+            *retval_byte = 0;
+            return;
+        }
+    }
+}
+
+static void 
+byte_to_hex(char* upper_hex_value, char* lower_hex_value, char byte) {
+    if (!upper_hex_value || !lower_hex_value) {
+        *upper_hex_value = F;
+        *lower_hex_value = F;
+        return;
+    }
+    char upper = 0;
+    char lower = 0;
+    char lower_byte = byte & 0xF;
+    char upper_byte = byte >> 4;
+    *lower_hex_value = ((lower_byte < 10) ? ('0' + lower_byte) : 'A' + (lower_byte - 10));
+    *upper_hex_value = ((upper_byte < 10) ? ('0' + upper_byte) : 'A' + (upper_byte - 10));    
+}
+
+// Required by RFC2231 - src is always a utf-8 string in our case.
+LIBETPAN_EXPORT 
+void mailmime_parm_value_escape(char** dst, const char* src) {
+    if (!src || !dst)
+        return;
+
+    *dst = NULL;
+        
+    int number_of_octets = strlen(src);
+    if (number_of_octets < 1)
+        return;
+        
+    const char* ESCAPED_ENCODING_PREFIX = "utf-8''";
+    const int ESCAPED_ENCODING_PREFIX_LENGTH = 7;
+    size_t retval_len = ESCAPED_ENCODING_PREFIX_LENGTH + (number_of_octets * 3);
+    
+    char* unbroken_string = calloc(retval_len + 1); // 8 = utf-8'' + \0
+    strncpy(unbroken_string, ESCAPED_ENCODING_PREFIX, retval_len);
+    
+    char* srcend = src + number_of_octets;
+    char* curr_src_ptr = src;
+    char* curr_dst_ptr = unbroken_string + ESCAPED_ENCODING_PREFIX_LENGTH;
+    
+    while (curr_src_ptr < srcend) {
+        char upper = 0;
+        char lower = 0;
+        byte_to_hex(&upper, &lower, *curr_src_ptr);
+        // detect FF? Is FF even possible? Leave it for now.
+        *curr_dst_ptr++ = '%';
+        *curr_dst_ptr++ = upper;
+        *curr_dst_ptr++ = lower;
+        curr_src_ptr++;
+    }
+    *dst = unbroken_string; // splitting is the caller's responsibility
+}
+
+// Required by RFC2231
+LIBETPAN_EXPORT 
+void mailmime_parm_value_unescape(char** dst, const char* src) {
+    *dst = NULL;
+    int percent_count = 0;
+    size_t srclen = strlen(src);
+    const char* srcpointer = src;
+    const char* end = src + srclen;
+    while (srcpointer && srcpointer < end) {
+        srcpointer = (strstr(srcpointer, "%"));
+        if (srcpointer) {
+            percent_count++;
+            srcpointer++;
+        }    
+    }
+    if (percent_count) {
+        size_t new_len = srclen + percent_count; // - 1 byte for %, + 2 bytes for 2nd hex digit
+        char* retstr = (char*)calloc(new_len + 1, 1);
+        char* dstpointer = retstr;
+        srcpointer = src;
+        while (*srcpointer && srcpointer < end) {
+            if (*srcpointer != '%') {
+                *dstpointer = *srcpointer;
+                dstpointer++;
+                srcpointer++;
+            }
+            else {
+                srcpointer++;
+                if (!(*srcpointer) || (srcpointer + 1) >= end) {
+                    // Badness! Stop!
+                    free(retstr);
+                    return;
+                }
+                hex_to_byte(dstpointer, srcpointer);
+                if (*dstpointer == 0) {
+                    free(retstr);
+                    return;
+                }
+                dstpointer++;
+                srcpointer += 2;
+            }
+        }
+        *dst = retstr;
+    }
+}
+
+
+
+
 /*
 x  content := "Content-Type" ":" type "/" subtype
              *(";" parameter)
@@ -1290,6 +1425,69 @@ static int mailmime_type_parse(const char * message, size_t length,
  err:
   return res;
 }
+
+/*
+x  extended-initial-value := [charset] "'" [language] "'"
+x                             extended-other-values
+*/
+
+LIBETPAN_EXPORT
+int mailmime_extended_initial_value_parse(const char * message, size_t length,
+			 size_t * indx, char ** result, char** charset, char** language)
+{
+    int r;
+    char* value = NULL;
+    size_t value_length = 0;
+    size_t cur_token = * indx;
+
+    r = mailimf_atom_parse(message, length, &cur_token, &value);
+
+    if (r != MAILIMF_NO_ERROR)
+        return r;
+
+    if (value)
+        value_length = strlen(value);
+        
+    // ok, let's see what happens here...
+    char* end_charset = strstr(value, "'");
+    if (end_charset == NULL || (value + value_length <= end_charset + 1)) {
+        free(value);
+        return MAILIMF_ERROR_PARSE;
+    }
+    char* end_lang = strstr(end_charset + 1, "'");
+    if (end_lang == NULL || (value + value_length < end_lang)) { // could be empty after
+        free(value);
+        return MAILIMF_ERROR_PARSE;
+    }        
+    
+    size_t charset_len = end_charset - value;
+    size_t lang_len = end_lang - (end_charset + 1);
+    size_t retval_len = strlen(value) - (charset_len + lang_len + 2);
+    
+    char* _charset = calloc(charset_len + 1, 1);
+    char* _lang = calloc(lang_len + 1, 1);
+    char* _value = calloc(retval_len + 1, 1);
+    
+    if (charset_len > 0) {
+        strncpy(_charset, value, charset_len);
+    }
+    if (lang_len > 0) {
+        strncpy(_lang, end_charset + 1, lang_len);
+    }
+    if (retval_len > 0) {
+        strncpy(_value, end_lang + 1, retval_len);
+    }
+    
+    free(value);
+    
+    * result = _value;
+    * charset = _charset;
+    * language = _lang;
+    * indx = cur_token;
+
+  return MAILIMF_NO_ERROR;
+}
+
 
 /*
 x  value := token / quoted-string

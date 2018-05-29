@@ -428,6 +428,95 @@ static int mailmime_disposition_write_driver(int (* do_write)(void *, const char
   return MAILIMF_NO_ERROR;
 }
 
+static void 
+break_filename(char** extended_filename, const char* filename_str, 
+               size_t length, int is_encoded) {
+    if (!extended_filename || !filename_str || length < 1)
+        return;
+    
+    char* retstr = NULL;
+    
+    clist* line_list = clist_new();
+    
+    // We'll be adding a lot of ";\r\n" into the output, so we make an initial educated guess on size
+    size_t filename_key_len = (is encoded ? 11 : 10); // " filename*0*=" | " filename*0="    
+    size_t addl_chars_len = (is_encoded ? 3 : 5); // ";\r\n" + 2 quotes 
+    const char* equals_str = (is_encoded ? "*=" : "=\"");
+    const char* end_str = (is_encoded ? ";\r\n" : "\";\r\n")
+    size_t key_buffer_size = filename_key_len + 5; // This is ridiculous, because 1000+ -part filenames??? But ok.
+
+    int curr_line_count, curr_char_count;
+    
+    const char* curr_src_ptr = filename_str;
+    const char* curr_src_end = filename_str + strlen(filename_str);
+
+    size_t end_string_size = (is_encoded ? 3 : 4);
+    char curr_line_buf[80];
+    char* temp_octet_buffer[80];
+    
+    for (curr_line_count = 0, curr_char_count = 0; curr_src_ptr > curr_end_ptr; curr_line_count++) {
+        // Start line.
+        if (curr_line_count > 9999)
+            return; // FIXME - free stuff
+
+        char* curr_line_ptr = curr_line_buf;    
+        snprintf(curr_line_buff, key_buffer_size, " filename*%d%s", curr_line_count, equals_str);
+        size_t curr_key_len = strlen(curr_line_buff);
+
+        curr_line_ptr += curr_key_len;    
+        curr_char_count += curr_key_len;
+        
+        size_t max_remaining_line_chars = length - curr_key_len - addl_chars_len;
+        int i;
+                
+        if (!encoded) {
+            for (i = 0; i < max_remaining_line_chars && curr_src_ptr > curr_end_ptr; i++) {
+                *curr_line_ptr++ = *curr_src_ptr++;
+                curr_char_count++;
+            }
+        }
+        else {
+            // Fun fun fun.
+            // UTF-8 characters run between one and four octets. Thus, we
+            // should always be safe copying the first max_remaining - 3 of them
+            // and then finding a break either there or in the next 3 chars.
+            size_t max_safe = max_remaining - 3;
+            for (i = 0; i < max_safe && curr_src_ptr > curr_end_ptr; i++) {
+                *curr_line_ptr++ = *curr_src_ptr++;
+                curr_char_count++;
+            }
+            if (curr_src_ptr != end_ptr) {
+                // Check last copied char
+                char tester = *(curr_line_ptr - 1);
+                if (!is_breakable(tester)) {
+                    for (i = 0; i < 3 && curr_src_ptr > curr_end_ptr; i++) {
+                        tester = *curr_str_ptr++;
+                        *curr_line_ptr++ = tester;
+                        curr_char_count++;
+                        if (is_breakable(tester))
+                            break;
+                    }
+                }
+            }
+        }
+        if (curr_src_ptr >= curr_end_ptr) {
+            strcpy(curr_line_ptr, (is_encoded ? "\r\n" : "\"\r\n"));
+            curr_char_count += (is_encoded ? 2 : 3);
+            clist_append(line_list, strdup(curr_line_buf));
+            break;
+        }
+        else {
+            strcpy(curr_line_ptr, end_str);
+            curr_char_count += end_string_size;
+            clist_append(line_list, strdup(curr_line_buf));             
+        }    
+    }
+    
+    *extended_filename = calloc(curr_char_count + 1, 1);
+
+    
+}
+
 static int
 mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
 				 struct mailmime_disposition_parm * param)
@@ -435,10 +524,35 @@ mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, s
   size_t len;
   char sizestr[20];
   int r;
-
+  int has_extended_filename = 0;
+  int has_encoded_filename = 0;
+  char* extended_filename = NULL;
+  
   switch (param->pa_type) {
   case MAILMIME_DISPOSITION_PARM_FILENAME:
-    len = strlen("filename=") + strlen(param->pa_data.pa_filename);
+    char* fname = param->pa_data.pa_filename;
+    const int _MIME_LINE_LENGTH = 72;
+    const int _QUOTES_PLUS_SPACE_LEN = 3;
+    size_t filename_strlen = strlen(fname);
+    size_t filename_key_len = strlen("filename=");
+    if (strstr(fname, "utf-8''") == fname) {
+        // we're in for some fun here...
+        has_encoded_filename = true;
+        filename_key_len++;
+    }
+    if ((filename_strlen + filename_keylen + _QUOTES_PLUS_SPACE_LEN) > _MIME_LINE_LENGTH)
+        has_extended_filename = 1;
+    
+    if (!has_extended_filename) {
+        if (has_encoded_filename)    
+            len = strlen("filename=") + strlen(fname);
+        else
+            len = strlen("filename*=") + strlen(fname);
+    }
+    else {
+        extended_filename = break_filename(&extended_filename, fname, _MIME_LINE_LENGTH);
+        // This one contains all of the 
+    }
     break;
 
   case MAILMIME_DISPOSITION_PARM_CREATION_DATE:

@@ -39,6 +39,7 @@
 
 #include "mailmime_disposition.h"
 #include "mailmime.h"
+#include "charconv.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -423,6 +424,223 @@ mailmime_disposition_parm_parse(const char * message, size_t length,
 }
 
 /*
+//     filename-parm := "filename" "=" value
+*/
+
+static int
+mailmime_extended_parm_parse(const char * message, size_t length,
+			                 char * key, size_t * indx, char ** result)
+{
+    int r;
+    size_t cur_token;
+    char* built_str = NULL;
+    size_t built_len = 0;
+    
+    cur_token = * indx;
+
+    r = mailimf_token_case_insensitive_parse(message, length,
+    				                         &cur_token, key);
+    if (r != MAILIMF_NO_ERROR)
+        return r;
+
+    // Ok, we know it's of this type.
+    // So let's see if it's encoded or extended or both
+
+    int encoded = 0;
+    int extended = 0;
+
+    // Find out if message is extended, encoded, or both
+    r = mailimf_char_parse(message, length, &cur_token, '*');
+
+    if (r == MAILIMF_NO_ERROR) {
+        r = mailimf_char_parse(message, length, &cur_token, '0');
+
+        if (r == MAILIMF_NO_ERROR) {
+            extended = 1;
+            r = mailimf_char_parse(message, length, &cur_token, '*');
+            if (r == MAILIMF_NO_ERROR)
+                encoded = 1;
+            else if (r != MAILIMF_ERROR_PARSE)
+                return r;
+        }    
+        else if (r != MAILIMF_ERROR_PARSE)
+            return r;
+    }
+    else //if (r != MAILIMF_ERROR_PARSE)
+        return r;
+  
+    r = mailimf_unstrict_char_parse(message, length, &cur_token, '=');
+    if (r != MAILIMF_NO_ERROR)
+        return r;
+  
+    r = mailimf_cfws_parse(message, length, &cur_token);
+    if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE))
+        return r;
+
+    // Ok, let's go.
+    if (encoded || extended) {
+        char* _charset = NULL;
+        char* _lang = NULL;
+        
+        
+        // Get the first of either
+        if (encoded) {
+            r = mailmime_extended_initial_value_parse(message, length, &cur_token, &built_str, &_charset,
+                                                      &_lang);
+            if (r != MAILIMF_NO_ERROR)
+                return r;            
+        } 
+        else if (extended) {
+            r = mailmime_value_parse(message, length, &cur_token, &built_str);
+            if (r != MAILIMF_NO_ERROR)
+                return r;            
+        }                
+        // Ok, we have an initial string and know it's extended, so let's roll.
+        if (extended && built_str) {
+            built_len = strlen(built_str);
+
+            while (1) {
+
+                r = mailimf_unstrict_char_parse(message, length, &cur_token, ';');
+                if (r != MAILIMF_NO_ERROR && r != MAILIMF_ERROR_PARSE)
+                    return r;
+
+                r = mailimf_cfws_parse(message, length, &cur_token);
+                if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE))
+                    return r;
+                    
+                // FIXME: this is where we have to check and see what really happens...
+                r = mailimf_token_case_insensitive_parse(message, length,
+                				                         &cur_token, key);
+                if (r == MAILIMF_ERROR_PARSE)
+                    break;
+                    
+                if (r != MAILIMF_NO_ERROR)
+                    return r;
+
+                // Ok, we know it's of this type.
+                // So let's see if it's encoded or extended or both
+                
+                // int part_encoded = 0;
+                // int part_extended = 0;
+
+                // Find out if message part is extended, encoded, or both
+                r = mailimf_char_parse(message, length, &cur_token, '*');
+
+                if (r == MAILIMF_NO_ERROR) {
+                    uint32_t part_num = 0;
+                    r = mailimf_number_parse(message, length, &cur_token, &part_num);
+
+                    if (r == MAILIMF_NO_ERROR) {
+//                        part_extended = 1;
+                        r = mailimf_char_parse(message, length, &cur_token, '*');
+                        // See RFC2231, Section 4.1. FIXME - it's possible to have unencoded parts interspersed 
+                        // with encoded post per RFC, so this may not be smart. Depends on if decoding is an issue with
+                        // interspersed ASCII segments.
+                        // However, at this point, we know that the first part of the parameter either contained encoding information,
+                        // or it shouldn't be encoded. Also, it seems very doubtful most clients would go to the trouble of mixing encoded
+                        // and non-encoded information when splitting the string.
+                        // The fix right now is to ignore the encoding flag at this point, as we will either decode the whole string,
+                        // or not at all. 
+                    }    
+                    else if (r != MAILIMF_ERROR_PARSE)
+                        return r;
+                }
+                else if (r != MAILIMF_ERROR_PARSE)
+                    return r;
+              
+                r = mailimf_unstrict_char_parse(message, length, &cur_token, '=');
+                if (r != MAILIMF_NO_ERROR)
+                    return r;
+              
+                r = mailimf_cfws_parse(message, length, &cur_token);
+                if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE))
+                    return r;
+
+                // Ok, let's go.
+//                if (part_encoded || part_extended) {                    
+                    
+                char* part_str = NULL;
+                
+                // See RFC2231, Section 4.1. FIXME - it's possible to have unencoded parts interspersed 
+                // with encoded post per RFC, so this may not be smart. Depends on if decoding is an issue with
+                // interspersed ASCII segments.                
+                r = mailmime_value_parse(message, length, &cur_token, &part_str);
+                if (r != MAILIMF_NO_ERROR)
+                    return r;        
+                                                 
+                size_t part_size = strlen(part_str);
+                size_t new_size = built_len + part_size + 1;
+                
+                char* new_str = NULL;
+                new_str = realloc((void*)built_str, new_size);
+                if (new_str) {
+                    strncat(new_str, part_str, part_size);
+                    built_str = new_str;
+                    free(part_str);
+                    part_str = NULL;
+                }
+                else {
+                    free(built_str);
+                    return MAILIMF_ERROR_MEMORY;
+                }                                               
+
+//                }
+                built_len = strlen(built_str);    
+            }
+        }
+        
+        if (encoded && built_str && _charset && _charset[0] != '\0') {
+            char* replace_str = NULL;
+            mailmime_parm_value_unescape(&replace_str, built_str);
+
+            if (replace_str) {
+                free(built_str);
+                built_str = replace_str;
+                replace_str = NULL;
+            }
+                
+            if (strcasecmp(_charset, "utf-8") != 0 && 
+                strcasecmp(_charset, "utf8") != 0) {
+                
+                // best effort
+                r = charconv("utf-8", _charset, built_str,
+                             strlen(built_str), &replace_str);
+
+                switch(r) {
+                    case MAIL_CHARCONV_ERROR_UNKNOWN_CHARSET:
+                        r = charconv("utf-8", "iso-8859-1", built_str,
+                                      strlen(built_str), &replace_str);
+                        break;
+                    case MAIL_CHARCONV_ERROR_MEMORY:
+                        return MAILIMF_ERROR_MEMORY;
+                    case MAIL_CHARCONV_ERROR_CONV:
+                        return MAILIMF_ERROR_PARSE;
+                }                                                                      
+                switch (r) {
+                    case MAIL_CHARCONV_ERROR_MEMORY:
+                        return MAILIMF_ERROR_MEMORY;
+                    case MAIL_CHARCONV_ERROR_CONV:
+                        return MAILIMF_ERROR_PARSE;
+                }
+            }
+                                        
+            if (replace_str) {                         
+                built_str = replace_str;
+                replace_str = NULL;
+            }
+        }        
+    }
+    
+    * indx = cur_token;
+    * result = built_str;
+
+    return MAILIMF_NO_ERROR;
+}
+
+
+
+/*
      filename-parm := "filename" "=" value
 */
 
@@ -435,23 +653,29 @@ mailmime_filename_parm_parse(const char * message, size_t length,
   size_t cur_token;
 
   cur_token = * indx;
-
-  r = mailimf_token_case_insensitive_parse(message, length,
-					   &cur_token, "filename");
-  if (r != MAILIMF_NO_ERROR)
-    return r;
-
-  r = mailimf_unstrict_char_parse(message, length, &cur_token, '=');
-  if (r != MAILIMF_NO_ERROR)
-    return r;
   
-  r = mailimf_cfws_parse(message, length, &cur_token);
-  if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE))
-    return r;
+  r = mailmime_extended_parm_parse(message, length, "filename", &cur_token, &value);
   
-  r = mailmime_value_parse(message, length, &cur_token, &value);
-  if (r != MAILIMF_NO_ERROR)
-    return r;
+  if (r != MAILIMF_NO_ERROR) {
+
+    r = mailimf_token_case_insensitive_parse(message, length,
+    				   &cur_token, "filename");
+    if (r != MAILIMF_NO_ERROR)
+        return r;
+
+    r = mailimf_unstrict_char_parse(message, length, &cur_token, '=');
+    if (r != MAILIMF_NO_ERROR)
+        return r;
+
+    r = mailimf_cfws_parse(message, length, &cur_token);
+    if ((r != MAILIMF_NO_ERROR) && (r != MAILIMF_ERROR_PARSE))
+        return r;
+
+    r = mailmime_value_parse(message, length, &cur_token, &value);
+    if (r != MAILIMF_NO_ERROR)
+        return r;
+
+  }
 
   * indx = cur_token;
   * result = value;
