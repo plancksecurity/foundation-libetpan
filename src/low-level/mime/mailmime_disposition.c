@@ -465,6 +465,8 @@ mailmime_extended_parm_parse(const char * message, size_t length,
         }    
         else if (r != MAILIMF_ERROR_PARSE)
             return r;
+        else
+            encoded = 1;
     }
     else //if (r != MAILIMF_ERROR_PARSE)
         return r;
@@ -632,8 +634,8 @@ mailmime_extended_parm_parse(const char * message, size_t length,
         }        
     }
     
-    * indx = cur_token;
-    * result = built_str;
+    *indx = cur_token;
+    *result = built_str;
 
     return MAILIMF_NO_ERROR;
 }

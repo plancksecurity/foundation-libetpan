@@ -189,7 +189,7 @@ mailmime_composite_type_parse(const char * message, size_t length,
   return res;
 }
 
-static void 
+void 
 hex_to_byte(char* retval_byte, const char* hex_bytes) {
     *retval_byte = 0;
     char curr_char = hex_bytes[0];
@@ -224,15 +224,15 @@ hex_to_byte(char* retval_byte, const char* hex_bytes) {
     }
 }
 
-static void 
+void 
 byte_to_hex(char* upper_hex_value, char* lower_hex_value, char byte) {
     if (!upper_hex_value || !lower_hex_value) {
         *upper_hex_value = 'F';
         *lower_hex_value = 'F';
         return;
     }
-    char lower_byte = byte & 0xF;
-    char upper_byte = byte >> 4;
+    unsigned char lower_byte = (unsigned char)byte & 0xF;
+    unsigned char upper_byte = (unsigned char)((byte >> 4) & 0xF);
     *lower_hex_value = ((lower_byte < 10) ? ('0' + lower_byte) : 'A' + (lower_byte - 10));
     *upper_hex_value = ((upper_byte < 10) ? ('0' + upper_byte) : 'A' + (upper_byte - 10));    
 }

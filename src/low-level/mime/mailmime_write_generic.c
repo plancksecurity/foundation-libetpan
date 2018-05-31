@@ -428,6 +428,18 @@ static int mailmime_disposition_write_driver(int (* do_write)(void *, const char
   return MAILIMF_NO_ERROR;
 }
 
+static int contains_non_ascii(const char* check_string) {
+    const char* start = check_string;
+    size_t len = strlen(check_string);
+    const char* end = start + len;
+    while (start != end) {
+        char cur_char = *start++;
+        if (cur_char > 127 || cur_char < 0)
+            return TRUE;
+    }
+    return FALSE;
+}
+
 static void 
 break_filename(char** extended_filename, const char* filename_str, 
                size_t length, int is_encoded) {
@@ -479,43 +491,71 @@ break_filename(char** extended_filename, const char* filename_str,
             }
         }
         else {
+            if (curr_line_count == 0) {
+                int k = curr_char_count;
+                while (*curr_src_ptr != '%') {
+                    *curr_line_ptr++ = *curr_src_ptr++;
+                    curr_char_count++;                                        
+                }
+                k = curr_char_count - k;
+                max_remaining_line_chars -= k;
+            }
             // Fun fun fun.
-            // UTF-8 characters run between one and four octets. Thus, we
-            // should always be safe copying the first max_remaining - 3 of them
-            // and then finding a break either there or in the next 3 chars.
-            // Copy in the first max - 3 chars
-            size_t max_safe = max_remaining_line_chars - 3;
-            for (i = 0; i < max_safe && curr_src_ptr < curr_src_end; i++) {
-                *curr_line_ptr++ = *curr_src_ptr++;
-                curr_char_count++;
+            // UTF-8 chars run between one and four bytes. But these are UTF-8
+            // encoded now, so each byte is listed as two characters (hex value)
+            // and a percentage.
+            // Because they are between one and four bytes, always be safe 
+            // copying the first max_remaining - (3 * 3) of them
+            // and then finding a break either there or in the next 3 
+            // character byte representations..
+            // Copy in the first max - 3 * 3 chars
+            max_remaining_line_chars = max_remaining_line_chars - (max_remaining_line_chars % 3);
+             
+            size_t max_safe = max_remaining_line_chars - 9;
+            
+            // Copy in three at a time.
+            for (i = 0; i < max_safe && curr_src_ptr < curr_src_end; i += 3) {
+                int j;
+                for (j = 0; j < 3; j++) {
+                    *curr_line_ptr++ = *curr_src_ptr++;
+                    curr_char_count++;                    
+                }
             }
             if (curr_src_ptr != curr_src_end) {
-                // Check last copied char
-                unsigned char tester = (unsigned char) *(curr_line_ptr - 1);
-                
-                // Check to see if it's the start of a four-byte char
-                if (tester >= 0xF0) {
-                    // Add the next three
-                    for (i = 0; i < 3 && curr_src_ptr < curr_src_end; i++) {
-                        tester = (unsigned char) *curr_src_ptr++;
-                        *curr_line_ptr++ = tester;
-                        curr_char_count++;
+                char last_byte = 0;
+                if (curr_src_ptr > (filename_str + 2)) { // FIXME: This is just a crap error. Dunno how this'd NOT happen.
+                    hex_to_byte(&last_byte, curr_src_ptr - 2);
+                    // Check to see if it's the start of a four-byte char
+                    if ((unsigned char)last_byte >= 0xF0) {
+                        // Add the next three
+                        int j;
+                        if ((curr_src_ptr + 9) <= curr_src_end) {
+                            for (j = 0; j < 9 && curr_src_ptr < curr_src_end; j++) {
+                                *curr_line_ptr++ = *curr_src_ptr++;
+                                curr_char_count++;
+                            }
+                        }
+                    }
+                    else if ((unsigned char)last_byte >= 0x80) {
+                        // Find a break in the next 3 characters.
+                        for (i = 0; i < 2; i++) {
+                            if ((curr_src_ptr + 2) < curr_src_end) {
+                                last_byte = 0;
+                                hex_to_byte(&last_byte, curr_src_ptr + 1);
+                                // Is this byte the start of a new character?
+                                if ((unsigned char)last_byte < 0x7F || (unsigned char)last_byte > 0xC0)
+                                    break;
+                                // Nope, check the next
+                                int j;
+                                for (j = 0; j < 3; j++) {
+                                    *curr_line_ptr++ = *curr_src_ptr++;
+                                    curr_char_count++;
+                                }
+                            }
+                        }                                            
                     }
                 }
-                else if (tester >= 0x80) { // Ok, it's either two or three, or we're in the middle
-                    // Find a break in the next 3 characters.
-                    for (i = 0; i < 2 && curr_src_ptr < curr_src_end; i++) {
-                        tester = (unsigned char) *(curr_src_ptr); // this advances it one to where the src starts for analysis
-                        // Is this byte the start of a new character?
-                        if (tester < 0x7F || tester > 0xC0)
-                            break;
-                        // Nope, check the next
-                        *curr_line_ptr++ = tester;
-                        curr_src_ptr++;
-                        curr_char_count++;
-                    }                    
-                }                        
-            }
+            }            
         }
         if (curr_src_ptr >= curr_src_end) {
             strcpy(curr_line_ptr, (is_encoded ? "\r\n" : "\"\r\n"));
@@ -533,7 +573,6 @@ break_filename(char** extended_filename, const char* filename_str,
     size_t fname_size = curr_char_count + 1;
     *extended_filename = calloc(fname_size, 1);
 
-    
     clistiter* cur;
 //    int start = 1;
     if (line_list) {
@@ -568,10 +607,17 @@ mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, s
   const int _MIME_LINE_LENGTH = 72;
   const int _QUOTES_PLUS_SPACE_LEN = 3;
   size_t filename_strlen;
+  char* new_fname = NULL;
 
   switch (param->pa_type) {
   case MAILMIME_DISPOSITION_PARM_FILENAME:
-    filename_strlen = strlen(fname);
+    if (!fname)
+        break;
+    if (contains_non_ascii(fname)) {
+        mailmime_parm_value_escape(&new_fname, fname);
+        fname = new_fname;
+    }  
+    filename_strlen = strlen(fname);    
     if (strstr(fname, "utf-8''") == fname) {
         // we're in for some fun here...
         has_encoded_filename = 1;
@@ -584,11 +630,16 @@ mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, s
     if (!has_extended_filename) {
         if (has_encoded_filename) {   
             filename_key = "filename*=";
+            extended_filename = fname;
         }        
         len = filename_key_len + strlen(fname);
     }
     else {
         break_filename(&extended_filename, fname, _MIME_LINE_LENGTH, has_encoded_filename);
+        if (new_fname == fname) {
+            free(fname);
+            fname = new_fname = NULL;
+        }
         len = (extended_filename ? strlen(extended_filename) : 0);
     }
     break;
@@ -637,6 +688,12 @@ mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, s
   switch (param->pa_type) {
   case MAILMIME_DISPOSITION_PARM_FILENAME:
     if (extended_filename) {
+        if (has_encoded_filename && !has_extended_filename) {
+            r = mailimf_string_write_driver(do_write, data, col, 
+                    filename_key, filename_key_len);
+            if (r != MAILIMF_NO_ERROR)
+                return r;            
+        }
         r = mailimf_string_write_driver(do_write, data, col, 
                                         extended_filename, 
                                         strlen(extended_filename));
@@ -649,7 +706,7 @@ mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, s
                 filename_key, filename_key_len);
         if (r != MAILIMF_NO_ERROR)
             return r;
-        r = mailimf_string_write_driver(do_write, data, col, 
+        r = mailimf_quoted_string_write_driver(do_write, data, col,
                 param->pa_data.pa_filename, strlen(param->pa_data.pa_filename));
         if (r != MAILIMF_NO_ERROR)
             return r;
