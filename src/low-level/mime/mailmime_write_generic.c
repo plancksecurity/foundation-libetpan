@@ -59,6 +59,7 @@
 #include "mailimf_write_generic.h"
 #include "mailmime_content.h"
 #include "mailmime_types_helper.h"
+#include "mailmime.h"
 
 #include "syscall_wrappers.h"
 
@@ -445,9 +446,7 @@ break_filename(char** extended_filename, const char* filename_str,
                size_t length, int is_encoded) {
     if (!extended_filename || !filename_str || length < 1)
         return;
-    
-    char* retstr = NULL;
-    
+        
     clist* line_list = clist_new();
     
     // We'll be adding a lot of ";\r\n" into the output, so we make an initial educated guess on size
@@ -465,7 +464,6 @@ break_filename(char** extended_filename, const char* filename_str,
 
     size_t end_string_size = (is_encoded ? 3 : 4);
     char curr_line_buf[80];
-    char* temp_octet_buffer[80];
     snprintf(curr_line_buf, key_buffer_size, "\r\n");
     clist_append(line_list, strdup(curr_line_buf));
     
@@ -623,10 +621,9 @@ mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, s
         has_encoded_filename = 1;
         filename_key_len++;
     }
-    if ((filename_strlen + filename_key_len + _QUOTES_PLUS_SPACE_LEN) > _MIME_LINE_LENGTH)
+    if ((filename_strlen + filename_key_len + _QUOTES_PLUS_SPACE_LEN) > _MIME_LINE_LENGTH) {
         has_extended_filename = 1;
-        size_t filename_strlen = strlen(fname);
-
+    }
     if (!has_extended_filename) {
         if (has_encoded_filename) {   
             filename_key = "filename*=";
