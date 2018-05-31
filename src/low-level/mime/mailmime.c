@@ -227,12 +227,10 @@ hex_to_byte(char* retval_byte, const char* hex_bytes) {
 static void 
 byte_to_hex(char* upper_hex_value, char* lower_hex_value, char byte) {
     if (!upper_hex_value || !lower_hex_value) {
-        *upper_hex_value = F;
-        *lower_hex_value = F;
+        *upper_hex_value = 'F';
+        *lower_hex_value = 'F';
         return;
     }
-    char upper = 0;
-    char lower = 0;
     char lower_byte = byte & 0xF;
     char upper_byte = byte >> 4;
     *lower_hex_value = ((lower_byte < 10) ? ('0' + lower_byte) : 'A' + (lower_byte - 10));
@@ -255,7 +253,7 @@ void mailmime_parm_value_escape(char** dst, const char* src) {
     const int ESCAPED_ENCODING_PREFIX_LENGTH = 7;
     size_t retval_len = ESCAPED_ENCODING_PREFIX_LENGTH + (number_of_octets * 3);
     
-    char* unbroken_string = calloc(retval_len + 1); // 8 = utf-8'' + \0
+    char* unbroken_string = calloc(retval_len + 1, 1); // 8 = utf-8'' + \0
     strncpy(unbroken_string, ESCAPED_ENCODING_PREFIX, retval_len);
     
     char* srcend = src + number_of_octets;

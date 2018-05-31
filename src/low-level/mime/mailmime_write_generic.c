@@ -439,13 +439,14 @@ break_filename(char** extended_filename, const char* filename_str,
     clist* line_list = clist_new();
     
     // We'll be adding a lot of ";\r\n" into the output, so we make an initial educated guess on size
-    size_t filename_key_len = (is encoded ? 11 : 10); // " filename*0*=" | " filename*0="    
+    size_t filename_key_len = (is_encoded ? 11 : 10); // " filename*0*=" | " filename*0="    
     size_t addl_chars_len = (is_encoded ? 3 : 5); // ";\r\n" + 2 quotes 
     const char* equals_str = (is_encoded ? "*=" : "=\"");
-    const char* end_str = (is_encoded ? ";\r\n" : "\";\r\n")
+    const char* end_str = (is_encoded ? ";\r\n" : "\";\r\n");
     size_t key_buffer_size = filename_key_len + 5; // This is ridiculous, because 1000+ -part filenames??? But ok.
 
-    int curr_line_count, curr_char_count;
+    int curr_line_count = 0;
+    int curr_char_count = 0;
     
     const char* curr_src_ptr = filename_str;
     const char* curr_src_end = filename_str + strlen(filename_str);
@@ -453,24 +454,26 @@ break_filename(char** extended_filename, const char* filename_str,
     size_t end_string_size = (is_encoded ? 3 : 4);
     char curr_line_buf[80];
     char* temp_octet_buffer[80];
+    snprintf(curr_line_buf, key_buffer_size, "\r\n");
+    clist_append(line_list, strdup(curr_line_buf));
     
-    for (curr_line_count = 0, curr_char_count = 0; curr_src_ptr > curr_end_ptr; curr_line_count++) {
+    for (curr_char_count = 2; curr_src_ptr < curr_src_end; curr_line_count++) {
         // Start line.
         if (curr_line_count > 9999)
             return; // FIXME - free stuff
 
         char* curr_line_ptr = curr_line_buf;    
-        snprintf(curr_line_buff, key_buffer_size, " filename*%d%s", curr_line_count, equals_str);
-        size_t curr_key_len = strlen(curr_line_buff);
+        snprintf(curr_line_buf, key_buffer_size, " filename*%d%s", curr_line_count, equals_str);
+        size_t curr_key_len = strlen(curr_line_buf);
 
         curr_line_ptr += curr_key_len;    
         curr_char_count += curr_key_len;
         
         size_t max_remaining_line_chars = length - curr_key_len - addl_chars_len;
-        int i;
+        unsigned int i;
                 
-        if (!encoded) {
-            for (i = 0; i < max_remaining_line_chars && curr_src_ptr > curr_end_ptr; i++) {
+        if (!is_encoded) {
+            for (i = 0; i < max_remaining_line_chars && curr_src_ptr < curr_src_end; i++) {
                 *curr_line_ptr++ = *curr_src_ptr++;
                 curr_char_count++;
             }
@@ -480,26 +483,41 @@ break_filename(char** extended_filename, const char* filename_str,
             // UTF-8 characters run between one and four octets. Thus, we
             // should always be safe copying the first max_remaining - 3 of them
             // and then finding a break either there or in the next 3 chars.
-            size_t max_safe = max_remaining - 3;
-            for (i = 0; i < max_safe && curr_src_ptr > curr_end_ptr; i++) {
+            // Copy in the first max - 3 chars
+            size_t max_safe = max_remaining_line_chars - 3;
+            for (i = 0; i < max_safe && curr_src_ptr < curr_src_end; i++) {
                 *curr_line_ptr++ = *curr_src_ptr++;
                 curr_char_count++;
             }
-            if (curr_src_ptr != end_ptr) {
+            if (curr_src_ptr != curr_src_end) {
                 // Check last copied char
-                char tester = *(curr_line_ptr - 1);
-                if (!is_breakable(tester)) {
-                    for (i = 0; i < 3 && curr_src_ptr > curr_end_ptr; i++) {
-                        tester = *curr_str_ptr++;
+                unsigned char tester = (unsigned char) *(curr_line_ptr - 1);
+                
+                // Check to see if it's the start of a four-byte char
+                if (tester >= 0xF0) {
+                    // Add the next three
+                    for (i = 0; i < 3 && curr_src_ptr < curr_src_end; i++) {
+                        tester = (unsigned char) *curr_src_ptr++;
                         *curr_line_ptr++ = tester;
                         curr_char_count++;
-                        if (is_breakable(tester))
-                            break;
                     }
                 }
+                else if (tester >= 0x80) { // Ok, it's either two or three, or we're in the middle
+                    // Find a break in the next 3 characters.
+                    for (i = 0; i < 2 && curr_src_ptr < curr_src_end; i++) {
+                        tester = (unsigned char) *(curr_src_ptr); // this advances it one to where the src starts for analysis
+                        // Is this byte the start of a new character?
+                        if (tester < 0x7F || tester > 0xC0)
+                            break;
+                        // Nope, check the next
+                        *curr_line_ptr++ = tester;
+                        curr_src_ptr++;
+                        curr_char_count++;
+                    }                    
+                }                        
             }
         }
-        if (curr_src_ptr >= curr_end_ptr) {
+        if (curr_src_ptr >= curr_src_end) {
             strcpy(curr_line_ptr, (is_encoded ? "\r\n" : "\"\r\n"));
             curr_char_count += (is_encoded ? 2 : 3);
             clist_append(line_list, strdup(curr_line_buf));
@@ -512,9 +530,26 @@ break_filename(char** extended_filename, const char* filename_str,
         }    
     }
     
-    *extended_filename = calloc(curr_char_count + 1, 1);
+    size_t fname_size = curr_char_count + 1;
+    *extended_filename = calloc(fname_size, 1);
 
     
+    clistiter* cur;
+//    int start = 1;
+    if (line_list) {
+        for(cur = clist_begin(line_list) ; cur != NULL ; cur = clist_next(cur)) {
+            // if (start) {
+            //     strcpy(*extended_filename, ((char*)(cur->data)));
+            //     start = 0;
+            // }
+//            else {
+                strcat(*extended_filename, ((char*)(cur->data)));
+//            }
+            free(cur->data);
+            cur->data = NULL;
+        }
+    }
+    clist_free(line_list);
 }
 
 static int
@@ -527,31 +562,34 @@ mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, s
   int has_extended_filename = 0;
   int has_encoded_filename = 0;
   char* extended_filename = NULL;
-  
+  const char* filename_key = "filename=";       
+  size_t filename_key_len = strlen(filename_key);
+  char* fname = param->pa_data.pa_filename;
+  const int _MIME_LINE_LENGTH = 72;
+  const int _QUOTES_PLUS_SPACE_LEN = 3;
+  size_t filename_strlen;
+
   switch (param->pa_type) {
   case MAILMIME_DISPOSITION_PARM_FILENAME:
-    char* fname = param->pa_data.pa_filename;
-    const int _MIME_LINE_LENGTH = 72;
-    const int _QUOTES_PLUS_SPACE_LEN = 3;
-    size_t filename_strlen = strlen(fname);
-    size_t filename_key_len = strlen("filename=");
+    filename_strlen = strlen(fname);
     if (strstr(fname, "utf-8''") == fname) {
         // we're in for some fun here...
-        has_encoded_filename = true;
+        has_encoded_filename = 1;
         filename_key_len++;
     }
-    if ((filename_strlen + filename_keylen + _QUOTES_PLUS_SPACE_LEN) > _MIME_LINE_LENGTH)
+    if ((filename_strlen + filename_key_len + _QUOTES_PLUS_SPACE_LEN) > _MIME_LINE_LENGTH)
         has_extended_filename = 1;
-    
+        size_t filename_strlen = strlen(fname);
+
     if (!has_extended_filename) {
-        if (has_encoded_filename)    
-            len = strlen("filename=") + strlen(fname);
-        else
-            len = strlen("filename*=") + strlen(fname);
+        if (has_encoded_filename) {   
+            filename_key = "filename*=";
+        }        
+        len = filename_key_len + strlen(fname);
     }
     else {
-        extended_filename = break_filename(&extended_filename, fname, _MIME_LINE_LENGTH);
-        // This one contains all of the 
+        break_filename(&extended_filename, fname, _MIME_LINE_LENGTH, has_encoded_filename);
+        len = (extended_filename ? strlen(extended_filename) : 0);
     }
     break;
 
@@ -581,8 +619,10 @@ mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, s
   default:
     return MAILIMF_ERROR_INVAL;
   }
-
-  if (* col > 1) {
+  
+  
+// KG: FIXME - this could cause us trouble
+  if (* col > 1 && !extended_filename) {
       
     if (* col + len > MAX_MAIL_COL) {
       r = mailimf_string_write_driver(do_write, data, col, "\r\n ", 3);
@@ -596,14 +636,26 @@ mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, s
 
   switch (param->pa_type) {
   case MAILMIME_DISPOSITION_PARM_FILENAME:
-    r = mailimf_string_write_driver(do_write, data, col, "filename=", 9);
-    if (r != MAILIMF_NO_ERROR)
-      return r;
-
-    r = mailimf_quoted_string_write_driver(do_write, data, col,
-        param->pa_data.pa_filename, strlen(param->pa_data.pa_filename));
-    if (r != MAILIMF_NO_ERROR)
-      return r;
+    if (extended_filename) {
+        r = mailimf_string_write_driver(do_write, data, col, 
+                                        extended_filename, 
+                                        strlen(extended_filename));
+        if (r != MAILIMF_NO_ERROR)
+          return r;
+        free(extended_filename);
+    }
+    else {
+        r = mailimf_string_write_driver(do_write, data, col, 
+                filename_key, filename_key_len);
+        if (r != MAILIMF_NO_ERROR)
+            return r;
+        r = mailimf_string_write_driver(do_write, data, col, 
+                param->pa_data.pa_filename, strlen(param->pa_data.pa_filename));
+        if (r != MAILIMF_NO_ERROR)
+            return r;
+    }
+    //     param->pa_data.pa_filename, strlen(param->pa_data.pa_filename));
+    // r = mailimf_quoted_string_write_driver(do_write, data, col,
     break;
 
   case MAILMIME_DISPOSITION_PARM_CREATION_DATE:
