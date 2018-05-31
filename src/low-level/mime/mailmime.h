@@ -118,8 +118,14 @@ int mailmime_extended_initial_value_parse(const char * message, size_t length,
 
 void hex_to_byte(char* retval_byte, const char* hex_bytes);
 void byte_to_hex(char* upper_hex_value, char* lower_hex_value, char byte);
-             
-                                
+
+
+// Required by RFC2231
+LIBETPAN_EXPORT 
+void mailmime_parm_value_unescape(char** dst, const char* src);
+LIBETPAN_EXPORT 
+void mailmime_parm_value_escape(char** dst, const char* src);
+
 #ifdef __cplusplus
 }
 #endif
