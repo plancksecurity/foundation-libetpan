@@ -74,7 +74,7 @@
 #endif
 
 static int mailmime_field_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				struct mailmime_field * field);
+    struct mailmime_field * field);
 
 static int mailmime_id_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col, char * id);
 
@@ -83,37 +83,37 @@ static int mailmime_description_write_driver(int (* do_write)(void *, const char
 static int mailmime_version_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col, uint32_t version);
 
 static int mailmime_encoding_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				   struct mailmime_mechanism * encoding);
+       struct mailmime_mechanism * encoding);
 
 static int mailmime_language_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				   struct mailmime_language * language);
+       struct mailmime_language * language);
 
 static int mailmime_disposition_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				      struct mailmime_disposition *
-				      disposition);
+          struct mailmime_disposition *
+          disposition);
 
 static int
 mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				 struct mailmime_disposition_parm * param);
+     struct mailmime_disposition_parm * param);
 
 static int mailmime_parameter_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				    struct mailmime_parameter * param);
+        struct mailmime_parameter * param);
 
 /*
 static int mailmime_content_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				  struct mailmime_content * content);
+      struct mailmime_content * content);
 */
 
 static int mailmime_type_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-			       struct mailmime_type * type);
+           struct mailmime_type * type);
 
 static int
 mailmime_discrete_type_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-			     struct mailmime_discrete_type * discrete_type);
+         struct mailmime_discrete_type * discrete_type);
 
 static int
 mailmime_composite_type_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-			      struct mailmime_composite_type * composite_type);
+          struct mailmime_composite_type * composite_type);
 
 static int mailmime_sub_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
     struct mailmime * build_info);
@@ -140,7 +140,7 @@ int mailmime_fields_write_driver(int (* do_write)(void *, const char *, size_t),
 }
 
 static int mailmime_field_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				struct mailmime_field * field)
+    struct mailmime_field * field)
 {
   int r;
 
@@ -262,7 +262,7 @@ static int mailmime_version_write_driver(int (* do_write)(void *, const char *, 
 }
 
 static int mailmime_encoding_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				   struct mailmime_mechanism * encoding)
+       struct mailmime_mechanism * encoding)
 {
   int r;
 
@@ -315,7 +315,7 @@ static int mailmime_encoding_write_driver(int (* do_write)(void *, const char *,
 }
 
 static int mailmime_language_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				   struct mailmime_language * language)
+       struct mailmime_language * language)
 {
   int r;
   clistiter * cur;
@@ -338,7 +338,7 @@ static int mailmime_language_write_driver(int (* do_write)(void *, const char *,
     if (!first) {
       r = mailimf_string_write_driver(do_write, data, col, ", ", 2);
       if (r != MAILIMF_NO_ERROR)
-	return r;
+    return r;
     }
     else {
       first = FALSE;
@@ -347,11 +347,11 @@ static int mailmime_language_write_driver(int (* do_write)(void *, const char *,
     if (* col > 1) {
       
       if (* col + len > MAX_MAIL_COL) {
-	r = mailimf_string_write_driver(do_write, data, col, "\r\n ", 3);
-	if (r != MAILIMF_NO_ERROR)
-	  return r;
+    r = mailimf_string_write_driver(do_write, data, col, "\r\n ", 3);
+    if (r != MAILIMF_NO_ERROR)
+      return r;
 #if 0
-	* col = 1;
+    * col = 1;
 #endif
       }
     }
@@ -372,8 +372,8 @@ static int mailmime_language_write_driver(int (* do_write)(void *, const char *,
 }
 
 static int mailmime_disposition_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				      struct mailmime_disposition *
-				      disposition)
+          struct mailmime_disposition *
+          disposition)
 {
   struct mailmime_disposition_type * dsp_type;
   int r;
@@ -396,7 +396,7 @@ static int mailmime_disposition_write_driver(int (* do_write)(void *, const char
 
   case MAILMIME_DISPOSITION_TYPE_EXTENSION:
     r = mailimf_string_write_driver(do_write, data, col, dsp_type->dsp_extension,
-			     strlen(dsp_type->dsp_extension));
+         strlen(dsp_type->dsp_extension));
     break;
 
   default:
@@ -591,7 +591,7 @@ break_filename(char** extended_filename, const char* filename_str,
 
 static int
 mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				 struct mailmime_disposition_parm * param)
+     struct mailmime_disposition_parm * param)
 {
   size_t len;
   char sizestr[20];
@@ -675,7 +675,7 @@ mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, s
     if (* col + len > MAX_MAIL_COL) {
       r = mailimf_string_write_driver(do_write, data, col, "\r\n ", 3);
       if (r != MAILIMF_NO_ERROR)
-	return r;
+    return r;
 #if 0
       * col = 1;
 #endif
@@ -767,7 +767,7 @@ mailmime_disposition_param_write_driver(int (* do_write)(void *, const char *, s
 }
 
 static int mailmime_parameter_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				    struct mailmime_parameter * param)
+        struct mailmime_parameter * param)
 {
   int r;
 
@@ -789,7 +789,7 @@ static int mailmime_parameter_write_driver(int (* do_write)(void *, const char *
 }
 
 int mailmime_content_type_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				struct mailmime_content * content)
+    struct mailmime_content * content)
 {
   clistiter * cur;
   size_t len;
@@ -810,32 +810,32 @@ int mailmime_content_type_write_driver(int (* do_write)(void *, const char *, si
 
   if (content->ct_parameters != NULL) {
     for(cur = clist_begin(content->ct_parameters) ;
-	cur != NULL ; cur = clist_next(cur)) {
+    cur != NULL ; cur = clist_next(cur)) {
       struct mailmime_parameter * param;
 
       param = cur->data;
 
       r = mailimf_string_write_driver(do_write, data, col, "; ", 2);
       if (r != MAILIMF_NO_ERROR)
-	return r;
+    return r;
 
       len = strlen(param->pa_name) + 1 + strlen(param->pa_value);
 
       if (* col > 1) {
       
-	if (* col + len > MAX_MAIL_COL) {
-	  r = mailimf_string_write_driver(do_write, data, col, "\r\n ", 3);
-	  if (r != MAILIMF_NO_ERROR)
-	    return r;
+    if (* col + len > MAX_MAIL_COL) {
+      r = mailimf_string_write_driver(do_write, data, col, "\r\n ", 3);
+      if (r != MAILIMF_NO_ERROR)
+        return r;
 #if 0
-	  * col = 1;
+      * col = 1;
 #endif
-	}
+    }
       }
     
       r = mailmime_parameter_write_driver(do_write, data, col, param);
       if (r != MAILIMF_NO_ERROR)
-	return r;
+    return r;
     }
   }
 
@@ -843,7 +843,7 @@ int mailmime_content_type_write_driver(int (* do_write)(void *, const char *, si
 }
 
 int mailmime_content_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-			   struct mailmime_content * content)
+       struct mailmime_content * content)
 {
   int r;
 
@@ -863,7 +863,7 @@ int mailmime_content_write_driver(int (* do_write)(void *, const char *, size_t)
 }
 
 static int mailmime_type_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-			       struct mailmime_type * type)
+           struct mailmime_type * type)
 {
   int r;
 
@@ -889,7 +889,7 @@ static int mailmime_type_write_driver(int (* do_write)(void *, const char *, siz
 
 static int
 mailmime_discrete_type_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-			     struct mailmime_discrete_type * discrete_type)
+         struct mailmime_discrete_type * discrete_type)
 {
   int r;
 
@@ -916,7 +916,7 @@ mailmime_discrete_type_write_driver(int (* do_write)(void *, const char *, size_
 
   case MAILMIME_DISCRETE_TYPE_EXTENSION:
     r = mailimf_string_write_driver(do_write, data, col, discrete_type->dt_extension,
-			     strlen(discrete_type->dt_extension));
+         strlen(discrete_type->dt_extension));
     break;
 
   default:
@@ -932,7 +932,7 @@ mailmime_discrete_type_write_driver(int (* do_write)(void *, const char *, size_
 
 static int
 mailmime_composite_type_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-			      struct mailmime_composite_type * composite_type)
+          struct mailmime_composite_type * composite_type)
 {
   int r;
 
@@ -947,7 +947,7 @@ mailmime_composite_type_write_driver(int (* do_write)(void *, const char *, size
 
   case MAILMIME_COMPOSITE_TYPE_EXTENSION:
     r = mailimf_string_write_driver(do_write, data, col, composite_type->ct_token,
-			     strlen(composite_type->ct_token));
+         strlen(composite_type->ct_token));
     break;
 
   default:
@@ -969,247 +969,249 @@ mailmime_composite_type_write_driver(int (* do_write)(void *, const char *, size
 
 /*
 static int mailmime_data_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-			       struct mailmime_data * data,
-			       int is_text);
+           struct mailmime_data * data,
+           int is_text);
 */
 
 static int mailmime_text_content_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col, int encoding,
-				       int istext,
-				       const char * text, size_t size);
+           int istext,
+           const char * text, size_t size);
 
 /*
 static int mailmime_base64_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				 char * text, size_t size);
+     char * text, size_t size);
 
 static int mailmime_quoted_printable_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col, int istext,
-					   char * text, size_t size);
+       char * text, size_t size);
 */
 
 static int mailmime_part_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
     struct mailmime * build_info)
 {
-  clistiter * cur;
-  int first;
-  int r;
-  char * boundary;
-  int istext;
-  int res;
+    clistiter * cur;
+    int first;
+    int r;
+    char * boundary;
+    int istext;
+    int res;
   
-  istext = TRUE;
-  boundary = NULL;
+    istext = TRUE;
+    boundary = NULL;
 
-  if (build_info->mm_content_type != NULL) {
-    if (build_info->mm_type == MAILMIME_MULTIPLE) {
-      boundary = mailmime_extract_boundary(build_info->mm_content_type);
-      if (boundary == NULL) {
-        boundary = mailmime_generate_boundary();
-        if (boundary == NULL) {
-          res = MAILIMF_ERROR_MEMORY;
-          goto err;
+    if (build_info->mm_content_type != NULL) {
+        if (build_info->mm_type == MAILMIME_MULTIPLE) {
+            boundary = mailmime_extract_boundary(build_info->mm_content_type);
+            if (boundary == NULL) {
+                boundary = mailmime_generate_boundary();
+                if (boundary == NULL) {
+                    res = MAILIMF_ERROR_MEMORY;
+                    goto err;
+                }
+            }
         }
-      }
-    }
     
-    if (build_info->mm_content_type->ct_type->tp_type ==
-        MAILMIME_TYPE_DISCRETE_TYPE) {
-      if (build_info->mm_content_type->ct_type->tp_data.tp_discrete_type->dt_type !=
-          MAILMIME_DISCRETE_TYPE_TEXT)
-        istext = FALSE;
-    }
-  }
+        if (build_info->mm_content_type->ct_type->tp_type ==
+            MAILMIME_TYPE_DISCRETE_TYPE) {
+                if (build_info->mm_content_type->ct_type->tp_data.tp_discrete_type->dt_type !=
+                    MAILMIME_DISCRETE_TYPE_TEXT)
+                    istext = FALSE;
+                }
+            }
     
-  switch (build_info->mm_type) {
-  case MAILMIME_SINGLE:
+            switch (build_info->mm_type) {
+                case MAILMIME_SINGLE:
     
-    /* 1-part body */
+                /* 1-part body */
 
-    if (build_info->mm_data.mm_single != NULL) {
-      r = mailmime_data_write_driver(do_write, data, col, build_info->mm_data.mm_single, istext);
-      if (r != MAILIMF_NO_ERROR) {
-        res = r;
-        goto free_boundary;
-      }
-    }
+                if (build_info->mm_data.mm_single != NULL) {
+                    r = mailmime_data_write_driver(do_write, data, col, build_info->mm_data.mm_single, istext);
+                    if (r != MAILIMF_NO_ERROR) {
+                        res = r;
+                        goto free_boundary;
+                    }
+                }
     
-    break;
+                break;
 
-  case MAILMIME_MULTIPLE:
+                case MAILMIME_MULTIPLE:
 
-    /* multi-part */
+                /* multi-part */
 
 
-    /* preamble */
+                /* preamble */
 
-    if (build_info->mm_data.mm_multipart.mm_preamble != NULL) {
-      r = mailmime_data_write_driver(do_write, data, col,
-          build_info->mm_data.mm_multipart.mm_preamble, TRUE);
-      if (r != MAILIMF_NO_ERROR) {
-        res = r;
-        goto free_boundary;
-      }
+                if (build_info->mm_data.mm_multipart.mm_preamble != NULL) {
+                    r = mailmime_data_write_driver(do_write, data, col,
+                        build_info->mm_data.mm_multipart.mm_preamble, TRUE);
+                        if (r != MAILIMF_NO_ERROR) {
+                            res = r;
+                            goto free_boundary;
+                        }
       
-      r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
-      if (r != MAILIMF_NO_ERROR) {
-        res = r;
-        goto free_boundary;
-      }
-    }
+                        r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
+                        if (r != MAILIMF_NO_ERROR) {
+                            res = r;
+                            goto free_boundary;
+                        }
+                    }
 
-    /* sub-parts */
+                    /* sub-parts */
 
-    first = TRUE;
+                    first = TRUE;
 
-    for(cur = clist_begin(build_info->mm_data.mm_multipart.mm_mp_list) ;
-        cur != NULL ; cur = clist_next(cur)) {
-      struct mailmime * subpart;
+                    for(cur = clist_begin(build_info->mm_data.mm_multipart.mm_mp_list) ;
+                        cur != NULL ; cur = clist_next(cur)) {
+                        struct mailmime * subpart;
 
-      subpart = cur->data;
+                        subpart = cur->data;
 
-      if (!first) {
-	r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
-	if (r != MAILIMF_NO_ERROR) {
-          res = r;
-          goto free_boundary;
-        }
-      }
-      else {
-	first = FALSE;
-      }
+                        if (!first) {
+                            r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
+                            if (r != MAILIMF_NO_ERROR) {
+                                res = r;
+                                goto free_boundary;
+                            }
+                        }
+                        else {
+                            first = FALSE;
+                        }
 
-      r = mailimf_string_write_driver(do_write, data, col, "--", 2);
-      if (r != MAILIMF_NO_ERROR) {
-        res = r;
-        goto free_boundary;
-      }
+                        r = mailimf_string_write_driver(do_write, data, col, "--", 2);
+                        if (r != MAILIMF_NO_ERROR) {
+                            res = r;
+                            goto free_boundary;
+                        }
 
-      if (boundary == NULL) {
-        // Make clang static analyzer happy.
-        res = MAILIMF_ERROR_MEMORY;
-        goto free_boundary;
-      }
+                        if (boundary == NULL) {
+                            // Make clang static analyzer happy.
+                            res = MAILIMF_ERROR_MEMORY;
+                            goto free_boundary;
+                        }
       
-      r = mailimf_string_write_driver(do_write, data, col, boundary, strlen(boundary));
-      if (r != MAILIMF_NO_ERROR) {
-        res = r;
-        goto free_boundary;
-      }
+                        r = mailimf_string_write_driver(do_write, data, col, boundary, strlen(boundary));
+                        if (r != MAILIMF_NO_ERROR) {
+                            res = r;
+                            goto free_boundary;
+                        }
 
-      r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
-      if (r != MAILIMF_NO_ERROR) {
-        res = r;
-        goto free_boundary;
-      }
+                        r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
+                        if (r != MAILIMF_NO_ERROR) {
+                            res = r;
+                            goto free_boundary;
+                        }
 
-      r = mailmime_sub_write_driver(do_write, data, col, subpart);
-      if (r != MAILIMF_NO_ERROR) {
-        res = r;
-        goto free_boundary;
-      }
-    }
+                        r = mailmime_sub_write_driver(do_write, data, col, subpart);
+                        if (r != MAILIMF_NO_ERROR) {
+                            res = r;
+                            goto free_boundary;
+                        }
+                    } // end for loop iterating over parts
     
-    r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
-    if (r != MAILIMF_NO_ERROR) {
-      res = r;
-      goto free_boundary;
-    }
+                    // write final boundary
+                    r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
+                    if (r != MAILIMF_NO_ERROR) {
+                        res = r;
+                        goto free_boundary;
+                    }
     
-    r = mailimf_string_write_driver(do_write, data, col, "--", 2);
-    if (r != MAILIMF_NO_ERROR) {
-      res = r;
-      goto free_boundary;
-    }
+                    r = mailimf_string_write_driver(do_write, data, col, "--", 2);
+                    if (r != MAILIMF_NO_ERROR) {
+                        res = r;
+                        goto free_boundary;
+                    }
     
-    if (boundary == NULL) {
-      // Make clang static analyzer happy.
-      res = MAILIMF_ERROR_MEMORY;
-      goto free_boundary;
-    }
+                    if (boundary == NULL) {
+                        // Make clang static analyzer happy.
+                        res = MAILIMF_ERROR_MEMORY;
+                        goto free_boundary;
+                    }
     
-    r = mailimf_string_write_driver(do_write, data, col, boundary, strlen(boundary));
-    if (r != MAILIMF_NO_ERROR) {
-      res = r;
-      goto free_boundary;
-    }
+                    r = mailimf_string_write_driver(do_write, data, col, boundary, strlen(boundary));
+                    if (r != MAILIMF_NO_ERROR) {
+                        res = r;
+                        goto free_boundary;
+                    }
 
-    r = mailimf_string_write_driver(do_write, data, col, "--", 2);
-    if (r != MAILIMF_NO_ERROR) {
-      res = r;
-      goto free_boundary;
-    }
+                    r = mailimf_string_write_driver(do_write, data, col, "--", 2);
+                    if (r != MAILIMF_NO_ERROR) {
+                        res = r;
+                        goto free_boundary;
+                    }
+                    // end write final boundary
 
-    /* epilogue */
+                    /* epilogue */
 
-    r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
-    if (r != MAILIMF_NO_ERROR) {
-      res = r;
-      goto free_boundary;
-    }
+                    r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
+                    if (r != MAILIMF_NO_ERROR) {
+                        res = r;
+                        goto free_boundary;
+                    }
     
-    if (build_info->mm_data.mm_multipart.mm_epilogue != NULL) {
-      r = mailmime_data_write_driver(do_write, data, col,
-          build_info->mm_data.mm_multipart.mm_epilogue, TRUE);
-      if (r != MAILIMF_NO_ERROR) {
-        res = r;
-        goto free_boundary;
-      }
-    }
+                    if (build_info->mm_data.mm_multipart.mm_epilogue != NULL) {
+                        r = mailmime_data_write_driver(do_write, data, col,
+                            build_info->mm_data.mm_multipart.mm_epilogue, TRUE);
+                            if (r != MAILIMF_NO_ERROR) {
+                                res = r;
+                                goto free_boundary;
+                            }
+                        }
 
-    break;
+                        break;
 
-  case MAILMIME_MESSAGE:
+                case MAILMIME_MESSAGE:
 
-    if (build_info->mm_data.mm_message.mm_fields != NULL) {
-      r = mailimf_fields_write_driver(do_write, data, col,
-          build_info->mm_data.mm_message.mm_fields);
-      if (r != MAILIMF_NO_ERROR) {
-        res = r;
-        goto free_boundary;
-      }
-    }
+                if (build_info->mm_data.mm_message.mm_fields != NULL) {
+                    r = mailimf_fields_write_driver(do_write, data, col,
+                        build_info->mm_data.mm_message.mm_fields);
+                        if (r != MAILIMF_NO_ERROR) {
+                            res = r;
+                            goto free_boundary;
+                        }
+                    }
 
-    if (build_info->mm_mime_fields != NULL) {
-      int r;
-      clistiter * cur;
-      
-      for(cur = clist_begin(build_info->mm_mime_fields->fld_list) ;
-          cur != NULL ;
-          cur = clist_next(cur)) {
-        struct mailmime_field * field;
-        
-        /* only MIME-Version field */
-        field = cur->data;
-        if (field->fld_type == MAILMIME_FIELD_VERSION) {
-          r = mailmime_field_write_driver(do_write, data, col, field);
-          if (r != MAILIMF_NO_ERROR) {
-            res = r;
-            goto free_boundary;
-          }
-        }
-      }
-    }
+                    if (build_info->mm_mime_fields != NULL) {
+                        int r;
+                        clistiter * cur;
 
-    /* encapsuled message */
-    
-    if (build_info->mm_data.mm_message.mm_msg_mime != NULL) {
-      r = mailmime_sub_write_driver(do_write, data, col,
-          build_info->mm_data.mm_message.mm_msg_mime);
-      if (r != MAILIMF_NO_ERROR) {
-        res = r;
-        goto free_boundary;
-      }
-    }
-    break;
-    
-  }
+                        for(cur = clist_begin(build_info->mm_mime_fields->fld_list) ;
+                        cur != NULL ;
+                        cur = clist_next(cur)) {
+                            struct mailmime_field * field;
+
+                            /* only MIME-Version field */
+                            field = cur->data;
+                            if (field->fld_type == MAILMIME_FIELD_VERSION) {
+                                r = mailmime_field_write_driver(do_write, data, col, field);
+                                if (r != MAILIMF_NO_ERROR) {
+                                    res = r;
+                                    goto free_boundary;
+                                }
+                            }
+                        }
+                    }
+
+                    /* encapsuled message */
+
+                    if (build_info->mm_data.mm_message.mm_msg_mime != NULL) {
+                        r = mailmime_sub_write_driver(do_write, data, col,
+                            build_info->mm_data.mm_message.mm_msg_mime);
+                            if (r != MAILIMF_NO_ERROR) {
+                                res = r;
+                                goto free_boundary;
+                            }
+                        }
+                        break;
+                        
+                    }
+
+                    free(boundary);
+
+                    return MAILIMF_NO_ERROR;
   
-  free(boundary);
-  
-  return MAILIMF_NO_ERROR;
-  
- free_boundary:
-  free(boundary);
- err:
-  return res;
+free_boundary:
+    free(boundary);
+err:
+    return res;
 }
 
 
@@ -1260,18 +1262,19 @@ static int mailmime_sub_write_driver(int (* do_write)(void *, const char *, size
     }
   }
 
-  r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
-  if (r != MAILIMF_NO_ERROR)
-    return r;
+  if (build_info->mm_content_type != NULL || build_info->mm_mime_fields != NULL) {
+      r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
+      if (r != MAILIMF_NO_ERROR)
+        return r;
 #if 0
-  * col = 0;
-#endif
-  
+    * col = 0;
+#endif  
+  }
   return mailmime_part_write_driver(do_write, data, col, build_info);
 }
 
 int mailmime_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-		   struct mailmime * build_info)
+       struct mailmime * build_info)
 {
   if (build_info->mm_parent != NULL)
     return mailmime_sub_write_driver(do_write, data, col, build_info);
@@ -1298,14 +1301,14 @@ int mailmime_data_write_driver(int (* do_write)(void *, const char *, size_t), v
           mime_data->dt_data.dt_text.dt_data,
           mime_data->dt_data.dt_text.dt_length);
       if (r != MAILIMF_NO_ERROR)
-	return r;
+    return r;
     }
     else {
       r = mailmime_text_content_write_driver(do_write, data, col, mime_data->dt_encoding, istext,
           mime_data->dt_data.dt_text.dt_data,
           mime_data->dt_data.dt_text.dt_length);
       if (r != MAILIMF_NO_ERROR)
-	return r;
+    return r;
     }
 
     break;
@@ -1367,8 +1370,8 @@ int mailmime_data_write_driver(int (* do_write)(void *, const char *, size_t), v
 }
 
 static int mailmime_text_content_write_driver(int (* do_write)(void *, const char *, size_t), void * data, int * col, int encoding,
-				       int istext,
-				       const char * text, size_t size)
+           int istext,
+           const char * text, size_t size)
 {
   switch (encoding) {
   case MAILMIME_MECHANISM_QUOTED_PRINTABLE:
@@ -1448,7 +1451,7 @@ int mailmime_base64_write_driver(int (* do_write)(void *, const char *, size_t),
     if (* col + 4 > BASE64_MAX_COL) {
       r = mailimf_string_write_driver(do_write, data, col, "\r\n", 2);
       if (r != MAILIMF_NO_ERROR)
-	return r;
+    return r;
 #if 0
       * col = 0;
 #endif
@@ -1480,7 +1483,7 @@ enum {
 
 #if 0
 static inline int write_try_buf(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				char ** pstart, size_t * plen)
+    char ** pstart, size_t * plen)
 {
   int r;
 
@@ -1496,7 +1499,7 @@ static inline int write_try_buf(int (* do_write)(void *, const char *, size_t), 
 #endif
 
 static inline int write_remaining(int (* do_write)(void *, const char *, size_t), void * data, int * col,
-				  const char ** pstart, size_t * plen)
+      const char ** pstart, size_t * plen)
 {
   int r;
 
