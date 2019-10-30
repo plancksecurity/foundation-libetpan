@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 build_version=1
 ANDROID_PLATFORM=android-18
@@ -33,9 +33,9 @@ tar xzf "$current_dir/../build-mac/autogen-result.tar.gz"
 make stamp-prepare
 
 # Copy public headers to include
-cp -rL include/libetpan "$current_dir/include"
+cp -RL include/libetpan "$current_dir/include"
 mkdir -p "$current_dir/$package_name-$build_version/include"
-cp -rL include/libetpan "$current_dir/$package_name-$build_version/include"
+cp -RL include/libetpan "$current_dir/$package_name-$build_version/include"
 
 # Start building.
 for arch in $archs ; do
