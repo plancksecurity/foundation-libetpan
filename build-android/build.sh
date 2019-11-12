@@ -24,9 +24,6 @@ function build {
   rm -rf "$current_dir/obj"
 }
 
-mkdir -p "$current_dir/third-party"
-cd "$current_dir/third-party"
-
 cd "$current_dir/.."
 tar xzf "$current_dir/../build-mac/autogen-result.tar.gz"
 ./configure
@@ -38,12 +35,15 @@ mkdir -p "$current_dir/$package_name-$build_version/include"
 cp -RL include/libetpan "$current_dir/$package_name-$build_version/include"
 
 # Start building.
+ANDROID_PLATFORM=android-18
+archs="armeabi armeabi-v7a x86"
 for arch in $archs ; do
   TARGET_ARCH_ABI=$arch
   build
 done
-
-rm -rf "$current_dir/third-party"
-cd "$current_dir"
-zip -qry "$package_name-$build_version.zip" "$package_name-$build_version"
-rm -rf "$package_name-$build_version"
+ANDROID_PLATFORM=android-21
+archs="arm64-v8a x86_64"
+for arch in $archs ; do
+  TARGET_ARCH_ABI=$arch
+  build
+done
