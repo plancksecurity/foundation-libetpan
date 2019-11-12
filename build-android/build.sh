@@ -19,8 +19,9 @@ function build {
   $ANDROID_NDK/ndk-build TARGET_PLATFORM=$ANDROID_PLATFORM TARGET_ARCH_ABI=$TARGET_ARCH_ABI \
     ICONV_PATH=$ICONV_PREFIX
 
-  mkdir -p "$current_dir/$package_name-$build_version/libs/$TARGET_ARCH_ABI"
-  cp "$current_dir/obj/local/$TARGET_ARCH_ABI/libetpan.a" "$current_dir/$package_name-$build_version/libs/$TARGET_ARCH_ABI"
+# Copy lib to arch/lib
+  mkdir -p "$current_dir/$package_name-$build_version/$TARGET_ARCH_ABI/lib"
+  cp "$current_dir/obj/local/$TARGET_ARCH_ABI/libetpan.a" "$current_dir/$package_name-$build_version/$TARGET_ARCH_ABI/lib"
   rm -rf "$current_dir/obj"
 }
 
@@ -31,8 +32,8 @@ make stamp-prepare
 
 # Copy public headers to include
 cp -RL include/libetpan "$current_dir/include"
-mkdir -p "$current_dir/$package_name-$build_version/include"
-cp -RL include/libetpan "$current_dir/$package_name-$build_version/include"
+mkdir -p "$current_dir/$package_name-$build_version/$TARGET_ARCH_ABI/include"
+cp -RL include/libetpan "$current_dir/$package_name-$build_version/$TARGET_ARCH_ABI/include"
 
 # Start building.
 ANDROID_PLATFORM=android-18
