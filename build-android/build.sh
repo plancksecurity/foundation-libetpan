@@ -19,13 +19,11 @@ function build {
   $ANDROID_NDK/ndk-build TARGET_PLATFORM=$ANDROID_PLATFORM TARGET_ARCH_ABI=$TARGET_ARCH_ABI \
     ICONV_PATH=$ICONV_PREFIX
 
-  mkdir -p "$current_dir/$package_name-$build_version/libs/$TARGET_ARCH_ABI"
-  cp "$current_dir/obj/local/$TARGET_ARCH_ABI/libetpan.a" "$current_dir/$package_name-$build_version/libs/$TARGET_ARCH_ABI"
+# Copy lib to arch/lib
+  mkdir -p "$current_dir/$package_name-$build_version/$TARGET_ARCH_ABI/lib"
+  cp "$current_dir/obj/local/$TARGET_ARCH_ABI/libetpan.a" "$current_dir/$package_name-$build_version/$TARGET_ARCH_ABI/lib"
   rm -rf "$current_dir/obj"
 }
-
-mkdir -p "$current_dir/third-party"
-cd "$current_dir/third-party"
 
 cd "$current_dir/.."
 tar xzf "$current_dir/../build-mac/autogen-result.tar.gz"
@@ -34,16 +32,19 @@ make stamp-prepare
 
 # Copy public headers to include
 cp -RL include/libetpan "$current_dir/include"
-mkdir -p "$current_dir/$package_name-$build_version/include"
-cp -RL include/libetpan "$current_dir/$package_name-$build_version/include"
+mkdir -p "$current_dir/$package_name-$build_version/$TARGET_ARCH_ABI/include"
+cp -RL include/libetpan "$current_dir/$package_name-$build_version/$TARGET_ARCH_ABI/include"
 
 # Start building.
+ANDROID_PLATFORM=android-18
+archs="armeabi armeabi-v7a x86"
 for arch in $archs ; do
   TARGET_ARCH_ABI=$arch
   build
 done
-
-rm -rf "$current_dir/third-party"
-cd "$current_dir"
-zip -qry "$package_name-$build_version.zip" "$package_name-$build_version"
-rm -rf "$package_name-$build_version"
+ANDROID_PLATFORM=android-21
+archs="arm64-v8a x86_64"
+for arch in $archs ; do
+  TARGET_ARCH_ABI=$arch
+  build
+done
