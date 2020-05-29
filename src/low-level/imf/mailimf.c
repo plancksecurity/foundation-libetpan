@@ -3216,10 +3216,8 @@ static int mailimf_addr_spec_parse(const char * message, size_t length,
 				   char ** result)
 {
   size_t cur_token;
-#if 0
-  char * local_part;
-  char * domain;
-#endif
+  char * local_part = NULL;
+  char * domain = NULL;
   char * addr_spec;
   int r;
   int res;
@@ -3246,104 +3244,142 @@ static int mailimf_addr_spec_parse(const char * message, size_t length,
   }
 
   begin = cur_token;
+  // So the previous code from below is a vast oversimplification that usually works. 
+  // You know, unless someone has a quoted string with an allowed qtext 
+  // char which is a special as defined by atext.
+  // 
+  // There seems to be ifdef'd code that will handle all of this, but who knows if it works?
+  //
+  // Since our application just cares about regular dot-atom addresses or quoted-string 
+  // ones, we'll do a little messy work here and keep the rest of the code as is.
 
-  final = FALSE;
-  while (1) {
-    switch (message[end]) {
-    case '>':
-    case ',':
-    case '\r':
-    case '\n':
-    case '(':
-    case ')':
-    case ':':
-    case ';':
-      final = TRUE;
-      break;
-    }
-
-    if (final)
-      break;
-
-    end ++;
-    if (end >= length)
-      break;
-  }
-
-  if (end == begin) {
-    res = MAILIMF_ERROR_PARSE;
-    goto err;
-  }
-  
-  addr_spec = malloc(end - cur_token + 1);
-  if (addr_spec == NULL) {
-    res = MAILIMF_ERROR_MEMORY;
-    goto err;
+  // Is this a quoted-string? We only add unconditioonal support for 
+  // quoted-string@atom addresses, because half of the support functions below
+  // are ifdef'd out and are partially unimplmented. Most quoted strings will
+  // pass the original shortcut anyway, you'll just fail if you have a : in the
+  // quoted-string and a domain-literal domain.
+  // So if you care about that, extend the implementation to all the ifdef'd stuff
+  r = mailimf_quoted_string_parse(message, length, &cur_token, &local_part);
+  if (r == MAILIMF_NO_ERROR && local_part) {
+      r = mailimf_at_sign_parse(message, length, &cur_token);
+      if (r == MAILIMF_NO_ERROR) {
+         r = mailimf_atom_parse(message, length, &cur_token, &domain);
+         if (r == MAILIMF_NO_ERROR) {
+            int alloc_len = strlen(local_part) + strlen(domain) + 2; // '@' + '\0'
+            addr_spec = calloc(1, alloc_len);
+            strcpy(addr_spec, local_part);
+            strcat(addr_spec, "@");
+            strcat(addr_spec, domain);
+         }
+      }
+      free(local_part);
+      free(domain);
   }
   
-  count = end - cur_token;
-  src = message + cur_token;
-  dest = addr_spec;
-  for(i = 0 ; i < count ; i ++) {
-    if ((* src != ' ') && (* src != '\t')) {
-      * dest = * src;
-      dest ++;
-    }
-    src ++;
-  }
-  * dest = '\0';
+  // Nope - default to lazy checking
+  if (r == MAILIMF_ERROR_PARSE) {
+      cur_token = begin; // reset
+
+      final = FALSE;
+        
+      // dot.atom presumption starts here
+      while (1) {
+        switch (message[end]) {
+        case '>':
+        case ',':
+        case '\r':
+        case '\n':
+        case '(':
+        case ')':
+        case ':':
+        case ';':
+          final = TRUE;
+          break;
+        }
+
+        if (final)
+          break;
+
+        end ++;
+        if (end >= length)
+          break;
+      }
+      
+      if (end == begin) {
+        res = MAILIMF_ERROR_PARSE;
+        goto err;
+      }
+      
+      addr_spec = malloc(end - cur_token + 1);
+      if (addr_spec == NULL) {
+        res = MAILIMF_ERROR_MEMORY;
+        goto err;
+      }
+      
+      count = end - cur_token;
+      src = message + cur_token;
+      dest = addr_spec;
+      for(i = 0 ; i < count ; i ++) {
+        if ((* src != ' ') && (* src != '\t')) {
+          * dest = * src;
+          dest ++;
+        }
+        src ++;
+      }
+      * dest = '\0';
   
 #if 0
-  strncpy(addr_spec, message + cur_token, end - cur_token);
-  addr_spec[end - cur_token] = '\0';
+      strncpy(addr_spec, message + cur_token, end - cur_token);
+      addr_spec[end - cur_token] = '\0';
 #endif
 
-  cur_token = end;
+      cur_token = end;
 
 #if 0
-  r = mailimf_local_part_parse(message, length, &cur_token, &local_part);
-  if (r != MAILIMF_NO_ERROR) {
-    res = r;
-    goto err;
-  }
+      r = mailimf_local_part_parse(message, length, &cur_token, &local_part);
+      if (r != MAILIMF_NO_ERROR) {
+        res = r;
+        goto err;
+      }
 
-  r = mailimf_at_sign_parse(message, length, &cur_token);
-  switch (r) {
-  case MAILIMF_NO_ERROR:
-    r = mailimf_domain_parse(message, length, &cur_token, &domain);
-    if (r != MAILIMF_NO_ERROR) {
-      res = r;
-      goto free_local_part;
-    }
-    break;
+      r = mailimf_at_sign_parse(message, length, &cur_token);
+      switch (r) {
+      case MAILIMF_NO_ERROR:
+        r = mailimf_domain_parse(message, length, &cur_token, &domain);
+        if (r != MAILIMF_NO_ERROR) {
+          res = r;
+          goto free_local_part;
+        }
+        break;
 
-  case MAILIMF_ERROR_PARSE:
-    domain = NULL;
-    break;
+      case MAILIMF_ERROR_PARSE:
+        domain = NULL;
+        break;
 
-  default:
-    res = r;
-    goto free_local_part;
-  }
+      default:
+        res = r;
+        goto free_local_part;
+      }
 
-  if (domain) {
-    addr_spec = malloc(strlen(local_part) + strlen(domain) + 2);
-    if (addr_spec == NULL) {
-      res = MAILIMF_ERROR_MEMORY;
-      goto free_domain;
-    }
-    
-    strcpy(addr_spec, local_part);
-    strcat(addr_spec, "@");
-    strcat(addr_spec, domain);
+      if (domain) {
+        addr_spec = malloc(strlen(local_part) + strlen(domain) + 2);
+        if (addr_spec == NULL) {
+          res = MAILIMF_ERROR_MEMORY;
+          goto free_domain;
+        }
+        
+        strcpy(addr_spec, local_part);
+        strcat(addr_spec, "@");
+        strcat(addr_spec, domain);
 
-    mailimf_domain_free(domain);
-    mailimf_local_part_free(local_part);
-  }
-  else {
-    addr_spec = local_part;
-  }
+        mailimf_domain_free(domain);
+        mailimf_local_part_free(local_part);
+      }
+      else {
+        addr_spec = local_part;
+      }
 #endif
+  }
 
   * result = addr_spec;
   * indx = cur_token;
@@ -7784,4 +7820,3 @@ mailimf_optional_fields_parse(const char * message, size_t length,
  err:
   return res;
 }
-
