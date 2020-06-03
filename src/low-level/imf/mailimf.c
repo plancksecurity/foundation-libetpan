@@ -3265,10 +3265,11 @@ static int mailimf_addr_spec_parse(const char * message, size_t length,
       if (r == MAILIMF_NO_ERROR) {
          r = mailimf_atom_parse(message, length, &cur_token, &domain);
          if (r == MAILIMF_NO_ERROR) {
-            int alloc_len = strlen(local_part) + strlen(domain) + 2; // '@' + '\0'
+            int alloc_len = strlen(local_part) + strlen(domain) + 4; // " + " + '@' + '\0'
             addr_spec = calloc(1, alloc_len);
-            strcpy(addr_spec, local_part);
-            strcat(addr_spec, "@");
+            addr_spec[0] = '"';
+            strcat(addr_spec, local_part);
+            strcat(addr_spec, "\"@");
             strcat(addr_spec, domain);
          }
       }
