@@ -562,11 +562,13 @@ if test "x$enable_ipv6" != "xno"; then
     AC_DEFINE(HAVE_IPV6, 1, [Define to enable IPv6 support.])
 
     dnl check for getaddrinfo and freeaddrinfo function presence
+  CFLAGS="$CFLAGS -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include/"
     for func in "getaddrinfo" "freeaddrinfo"; do
       AC_MSG_CHECKING([for $func])
-      AC_TRY_LINK([], [$func();], 
-                      [func_present=yes], 
-                      [func_present=no])
+      AC_TRY_LINK([#include <netdb.h> ],
+                  [$func;],
+                  [func_present=yes],
+                  [func_present=no])
       AC_MSG_RESULT($func_present)
 
       if test "x$func_present" = "xno"; then
