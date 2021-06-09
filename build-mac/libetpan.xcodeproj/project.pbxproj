@@ -554,13 +554,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		C6635C4716E000310066276E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C6635C4316DFFE6E0066276E;
-			remoteInfo = "libetpan-prepare";
-		};
 		C6635C5116E0027B0066276E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
@@ -1706,20 +1699,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXLegacyTarget section */
-		C6635C4316DFFE6E0066276E /* libetpan-prepare */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(SRCROOT)/update.sh";
-			buildConfigurationList = C6635C4416DFFE6E0066276E /* Build configuration list for PBXLegacyTarget "libetpan-prepare" */;
-			buildPhases = (
-			);
-			buildToolPath = /bin/sh;
-			buildWorkingDirectory = "$(SRCROOT)";
-			dependencies = (
-			);
-			name = "libetpan-prepare";
-			passBuildSettingsInEnvironment = 1;
-			productName = "libetpan-prepare";
-		};
 		C6635C4D16E002340066276E /* libetpan-prepare-ios */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(SRCROOT)/update.sh";
@@ -1749,7 +1728,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				C6635C4816E000310066276E /* PBXTargetDependency */,
 			);
 			name = libetpan;
 			productInstallPath = "$(HOME)/Library/Frameworks";
@@ -1779,6 +1757,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = C69AB10D1054700400F32FBD /* Build configuration list for PBXNativeTarget "static libetpan" */;
 			buildPhases = (
+				156AFEAD267107D600AF0039 /* Prepare / Configure */,
 				C6635C3316DFEFE00066276E /* ShellScript */,
 				C69AB10710546FE500F32FBD /* Sources */,
 			);
@@ -1817,7 +1796,6 @@
 				8DC2EF4F0486A6940098B216 /* libetpan */,
 				C69AB10910546FE500F32FBD /* static libetpan */,
 				C682E21815B315EF00BE9DA7 /* libetpan ios */,
-				C6635C4316DFFE6E0066276E /* libetpan-prepare */,
 				C6635C4D16E002340066276E /* libetpan-prepare-ios */,
 			);
 		};
@@ -1834,6 +1812,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		156AFEAD267107D600AF0039 /* Prepare / Configure */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Prepare / Configure";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "LIBETPAN_DIR=${PROJECT_DIR}/../\n\npushd \"${LIBETPAN_DIR}\"\n    ./autogen.sh --without-openssl --without-gnutls --without-sasl --without-curl --without-expat --without-zlib --disable-dependency-tracking\n    make clean\n    make -j 4\n            \npopd\n";
+		};
 		C6635C3316DFEFE00066276E /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -2447,11 +2443,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		C6635C4816E000310066276E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C6635C4316DFFE6E0066276E /* libetpan-prepare */;
-			targetProxy = C6635C4716E000310066276E /* PBXContainerItemProxy */;
-		};
 		C6635C5216E0027B0066276E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = C6635C4D16E002340066276E /* libetpan-prepare-ios */;
@@ -2543,20 +2534,6 @@
 					"-DHAVE_CONFIG_H=1",
 					"-DLIBETPAN_IOS_DISABLE_SSL=1",
 				);
-			};
-			name = Release;
-		};
-		C6635C4516DFFE6E0066276E /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				SDKROOT = macosx;
-			};
-			name = Debug;
-		};
-		C6635C4616DFFE6E0066276E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				SDKROOT = macosx;
 			};
 			name = Release;
 		};
@@ -2675,15 +2652,6 @@
 			buildConfigurations = (
 				1DEB91B208733DA50010E9CD /* Debug */,
 				1DEB91B308733DA50010E9CD /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		C6635C4416DFFE6E0066276E /* Build configuration list for PBXLegacyTarget "libetpan-prepare" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				C6635C4516DFFE6E0066276E /* Debug */,
-				C6635C4616DFFE6E0066276E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
