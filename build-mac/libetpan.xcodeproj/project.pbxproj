@@ -561,13 +561,6 @@
 			remoteGlobalIDString = C6635C4316DFFE6E0066276E;
 			remoteInfo = "libetpan-prepare";
 		};
-		C6635C4916E000340066276E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C6635C4316DFFE6E0066276E;
-			remoteInfo = "libetpan-prepare";
-		};
 		C6635C5116E0027B0066276E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
@@ -578,6 +571,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		156AFE802670E65E00AF0039 /* libiconv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libiconv.a; path = ../../local/lib/libiconv.a; sourceTree = "<group>"; };
 		2307A00A170AAA5500C43C59 /* mailstream_compress.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mailstream_compress.c; sourceTree = "<group>"; };
 		2307A00B170AAA5500C43C59 /* mailstream_compress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mailstream_compress.h; sourceTree = "<group>"; };
 		365DFFD115D1C93100F2DD85 /* xgmmsgid.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = xgmmsgid.c; sourceTree = "<group>"; };
@@ -1002,20 +996,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C682E2BC15B315EF00BE9DA7 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C69AB10810546FE500F32FBD /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -1036,6 +1016,7 @@
 				089C1665FE841158C02AAC07 /* Resources */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
 				034768DFFF38A50411DB9C8B /* Products */,
+				156AFE7F2670E65E00AF0039 /* Frameworks */,
 			);
 			indentWidth = 2;
 			name = libetpan;
@@ -1069,6 +1050,14 @@
 			);
 			name = libetpan;
 			path = ..;
+			sourceTree = "<group>";
+		};
+		156AFE7F2670E65E00AF0039 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				156AFE802670E65E00AF0039 /* libiconv.a */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		C6F9E82E105335BC0059C3BA /* src */ = {
@@ -1774,7 +1763,6 @@
 			buildPhases = (
 				C6635C3416DFF0030066276E /* ShellScript */,
 				C682E21B15B315EF00BE9DA7 /* Sources */,
-				C682E2BC15B315EF00BE9DA7 /* Frameworks */,
 				C6740DB515B384FB00D4A16B /* ShellScript */,
 			);
 			buildRules = (
@@ -1793,12 +1781,10 @@
 			buildPhases = (
 				C6635C3316DFEFE00066276E /* ShellScript */,
 				C69AB10710546FE500F32FBD /* Sources */,
-				C69AB10810546FE500F32FBD /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				C6635C4A16E000340066276E /* PBXTargetDependency */,
 			);
 			name = "static libetpan";
 			productName = "static libetpan";
@@ -2466,11 +2452,6 @@
 			target = C6635C4316DFFE6E0066276E /* libetpan-prepare */;
 			targetProxy = C6635C4716E000310066276E /* PBXContainerItemProxy */;
 		};
-		C6635C4A16E000340066276E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C6635C4316DFFE6E0066276E /* libetpan-prepare */;
-			targetProxy = C6635C4916E000340066276E /* PBXContainerItemProxy */;
-		};
 		C6635C5216E0027B0066276E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = C6635C4D16E002340066276E /* libetpan-prepare-ios */;
@@ -2535,6 +2516,7 @@
 					"$(SRCROOT)/..",
 					"$(SRCROOT)/include",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"-DHAVE_CFNETWORK=1",
@@ -2555,6 +2537,7 @@
 					"$(SRCROOT)/..",
 					"$(SRCROOT)/include",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CFLAGS = (
 					"-DHAVE_CFNETWORK=1",
 					"-DHAVE_CONFIG_H=1",
@@ -2649,7 +2632,8 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = /usr/local/lib;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = "${inherited}";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../local/lib/libiconv.a";
 				PRODUCT_NAME = etpan;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -2665,7 +2649,8 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = /usr/local/lib;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = "${inherited}";
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../local/lib/libiconv.a";
 				PRODUCT_NAME = etpan;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
