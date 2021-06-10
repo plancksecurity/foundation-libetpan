@@ -1759,6 +1759,7 @@
 			buildPhases = (
 				C6635C3316DFEFE00066276E /* ShellScript */,
 				C69AB10710546FE500F32FBD /* Sources */,
+				156AFEB9267208CE00AF0039 /* Copy Artefacts to Custom Build DIr */,
 			);
 			buildRules = (
 			);
@@ -1811,6 +1812,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		156AFEB9267208CE00AF0039 /* Copy Artefacts to Custom Build DIr */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Artefacts to Custom Build DIr";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nmkdir -p \"${CUSTOM_BUILD_DIR}\"\ncp -r \"${BUILD_DIR}/${CONFIGURATION}/libetpan.a\" \"${CUSTOM_BUILD_DIR}\"\n\n# COPY HEADERS\n#CUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include/pEp\"\n#mkdir -p \"${CUSTOM_INCLUDE_DIR}\"\n";
+		};
 		C6635C3316DFEFE00066276E /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -2485,6 +2504,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
+					"${PROJECT_DIR}/../../local/lib/include/**",
 					"$(SRCROOT)/..",
 					"$(SRCROOT)/include",
 				);
@@ -2506,6 +2526,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
+					"${PROJECT_DIR}/../../local/lib/include/**",
 					"$(SRCROOT)/..",
 					"$(SRCROOT)/include",
 				);
