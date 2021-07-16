@@ -1,3 +1,5 @@
+compile
+
 *.m4
 *.lo
 *.o
