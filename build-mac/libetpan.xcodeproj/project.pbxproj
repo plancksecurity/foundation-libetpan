@@ -7,15 +7,15 @@
 	objects = {
 
 /* Begin PBXAggregateTarget section */
-		156AFED72672635E00AF0039 /* prepare-macos */ = {
+		153AFC9726AAFEF100177147 /* prepare */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = 156AFEDA2672635E00AF0039 /* Build configuration list for PBXAggregateTarget "prepare-macos" */;
+			buildConfigurationList = 153AFC9926AAFEF100177147 /* Build configuration list for PBXAggregateTarget "prepare" */;
 			buildPhases = (
-				156AFEDB2672639100AF0039 /* Prepare */,
+				153AFC9826AAFEF100177147 /* Prepare */,
 			);
 			dependencies = (
 			);
-			name = "prepare-macos";
+			name = prepare;
 			productName = "prepare-macos";
 		};
 /* End PBXAggregateTarget section */
@@ -381,12 +381,26 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		156AFEDC267263CA00AF0039 /* PBXContainerItemProxy */ = {
+		153AFC9D26AAFF1E00177147 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 156AFED72672635E00AF0039;
-			remoteInfo = "prepare-macos";
+			remoteGlobalIDString = 153AFC9726AAFEF100177147;
+			remoteInfo = prepare;
+		};
+		153AFCA726AAFFCC00177147 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 153AFC9726AAFEF100177147;
+			remoteInfo = prepare;
+		};
+		153AFCAA26AAFFE300177147 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1585EF1D26A07B2A00B822E1 /* CommonPEPDependencies.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 153AFC9F26AAFF4000177147;
+			remoteInfo = "build-libetpan-dependencies_iOS";
 		};
 		1585EF3826A07C2300B822E1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -395,17 +409,9 @@
 			remoteGlobalIDString = 1585EE1C269DCEB300B822E1;
 			remoteInfo = "build-libetpan-dependencies_macOS";
 		};
-		C6635C5116E0027B0066276E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C6635C4D16E002340066276E;
-			remoteInfo = "libetpan-prepare-ios";
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		156AFE802670E65E00AF0039 /* libiconv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libiconv.a; path = ../../local/lib/libiconv.a; sourceTree = "<group>"; };
 		1585EF1D26A07B2A00B822E1 /* CommonPEPDependencies.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CommonPEPDependencies.xcodeproj; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/CommonPEPDependencies.xcodeproj"; sourceTree = "<group>"; };
 		1585F01326A1930000B822E1 /* libiconv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libiconv.a; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libiconv.a"; sourceTree = "<group>"; };
 		2307A00A170AAA5500C43C59 /* mailstream_compress.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mailstream_compress.c; sourceTree = "<group>"; };
@@ -814,6 +820,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		153AFCAC26AB001D00177147 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1585F01226A192E600B822E1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -882,7 +895,6 @@
 			isa = PBXGroup;
 			children = (
 				1585F01326A1930000B822E1 /* libiconv.a */,
-				156AFE802670E65E00AF0039 /* libiconv.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -1539,23 +1551,6 @@
 		};
 /* End PBXGroup section */
 
-/* Begin PBXLegacyTarget section */
-		C6635C4D16E002340066276E /* libetpan-prepare-ios */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(SRCROOT)/update.sh";
-			buildConfigurationList = C6635C4E16E002340066276E /* Build configuration list for PBXLegacyTarget "libetpan-prepare-ios" */;
-			buildPhases = (
-			);
-			buildToolPath = /bin/sh;
-			buildWorkingDirectory = "$(SRCROOT)";
-			dependencies = (
-			);
-			name = "libetpan-prepare-ios";
-			passBuildSettingsInEnvironment = 1;
-			productName = "libetpan-prepare";
-		};
-/* End PBXLegacyTarget section */
-
 /* Begin PBXNativeTarget section */
 		C682E21815B315EF00BE9DA7 /* libetpan ios */ = {
 			isa = PBXNativeTarget;
@@ -1563,12 +1558,13 @@
 			buildPhases = (
 				C6635C3416DFF0030066276E /* ShellScript */,
 				C682E21B15B315EF00BE9DA7 /* Sources */,
-				C6740DB515B384FB00D4A16B /* ShellScript */,
+				153AFCAC26AB001D00177147 /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				C6635C5216E0027B0066276E /* PBXTargetDependency */,
+				153AFCAB26AAFFE300177147 /* PBXTargetDependency */,
+				153AFC9E26AAFF1E00177147 /* PBXTargetDependency */,
 			);
 			name = "libetpan ios";
 			productName = "static libetpan";
@@ -1588,7 +1584,7 @@
 			);
 			dependencies = (
 				1585EF3926A07C2300B822E1 /* PBXTargetDependency */,
-				156AFEDD267263CA00AF0039 /* PBXTargetDependency */,
+				153AFCA826AAFFCC00177147 /* PBXTargetDependency */,
 			);
 			name = "libetpan macOS";
 			productName = "static libetpan";
@@ -1603,8 +1599,7 @@
 			attributes = {
 				LastUpgradeCheck = 0720;
 				TargetAttributes = {
-					156AFED72672635E00AF0039 = {
-						CreatedOnToolsVersion = 12.5;
+					153AFC9726AAFEF100177147 = {
 						DevelopmentTeam = NQLYU6MGPN;
 						ProvisioningStyle = Automatic;
 					};
@@ -1633,13 +1628,30 @@
 			targets = (
 				C69AB10910546FE500F32FBD /* libetpan macOS */,
 				C682E21815B315EF00BE9DA7 /* libetpan ios */,
-				C6635C4D16E002340066276E /* libetpan-prepare-ios */,
-				156AFED72672635E00AF0039 /* prepare-macos */,
+				153AFC9726AAFEF100177147 /* prepare */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		153AFC9826AAFEF100177147 /* Prepare */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = Prepare;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "sh -l ${PROJECT_DIR}/run-autogen.sh\n";
+		};
 		156AFEB9267208CE00AF0039 /* Copy Artefacts to Custom Build DIr */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1656,25 +1668,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nmkdir -p \"${CUSTOM_BUILD_DIR}\"\ncp -r \"${BUILD_DIR}/${CONFIGURATION}/libetpan.a\" \"${CUSTOM_BUILD_DIR}\"\n\n# COPY HEADERS\n#CUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include/pEp\"\n#mkdir -p \"${CUSTOM_INCLUDE_DIR}\"\n";
-		};
-		156AFEDB2672639100AF0039 /* Prepare */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = Prepare;
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "sh -l ${PROJECT_DIR}/update-macos.sh\n";
+			shellScript = "CUSTOM_BUILD_DIR=\"${PROJECT_DIR}/build\"\nmkdir -p \"${CUSTOM_BUILD_DIR}\"\ncp -r \"${BUILT_PRODUCTS_DIR}/libetpan.a\" \"${CUSTOM_BUILD_DIR}\"\n\n# COPY HEADERS\n#CUSTOM_INCLUDE_DIR=\"${CUSTOM_BUILD_DIR}/include/pEp\"\n#mkdir -p \"${CUSTOM_INCLUDE_DIR}\"\n";
 		};
 		C6635C3316DFEFE00066276E /* Get Headers */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1702,19 +1696,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "mkdir -p \"$BUILT_PRODUCTS_DIR/include\"\nrsync -aL \"$SRCROOT/../include/libetpan/\" \"$BUILT_PRODUCTS_DIR/include/libetpan/\"\n";
-		};
-		C6740DB515B384FB00D4A16B /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "cp \"$SRCROOT/libsasl-ios/lib/libsasl2.a\" \"$BUILT_PRODUCTS_DIR\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2092,25 +2073,30 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		156AFEDD267263CA00AF0039 /* PBXTargetDependency */ = {
+		153AFC9E26AAFF1E00177147 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 156AFED72672635E00AF0039 /* prepare-macos */;
-			targetProxy = 156AFEDC267263CA00AF0039 /* PBXContainerItemProxy */;
+			target = 153AFC9726AAFEF100177147 /* prepare */;
+			targetProxy = 153AFC9D26AAFF1E00177147 /* PBXContainerItemProxy */;
+		};
+		153AFCA826AAFFCC00177147 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 153AFC9726AAFEF100177147 /* prepare */;
+			targetProxy = 153AFCA726AAFFCC00177147 /* PBXContainerItemProxy */;
+		};
+		153AFCAB26AAFFE300177147 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "build-libetpan-dependencies_iOS";
+			targetProxy = 153AFCAA26AAFFE300177147 /* PBXContainerItemProxy */;
 		};
 		1585EF3926A07C2300B822E1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "build-libetpan-dependencies_macOS";
 			targetProxy = 1585EF3826A07C2300B822E1 /* PBXContainerItemProxy */;
 		};
-		C6635C5216E0027B0066276E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C6635C4D16E002340066276E /* libetpan-prepare-ios */;
-			targetProxy = C6635C5116E0027B0066276E /* PBXContainerItemProxy */;
-		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		156AFED82672635E00AF0039 /* Debug */ = {
+		153AFC9A26AAFEF100177147 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -2119,7 +2105,16 @@
 			};
 			name = Debug;
 		};
-		156AFED92672635E00AF0039 /* Release */ = {
+		153AFC9B26AAFEF100177147 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
+		};
+		153AFC9C26AAFEF100177147 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -2138,16 +2133,19 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"${PROJECT_DIR}/../../local/lib/include/**",
 					"$(SRCROOT)/..",
 					"$(SRCROOT)/include",
+					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/inlcude",
 				);
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CFLAGS = (
 					"-DHAVE_CONFIG_H=1",
 					"-DLIBETPAN_IOS_DISABLE_SSL=1",
 				);
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libiconv.a";
 			};
 			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
 		};
@@ -2163,7 +2161,6 @@
 				INSTALL_PATH = /usr/local/lib;
 				LIBRARY_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib";
 				MACOSX_DEPLOYMENT_TARGET = "${inherited}";
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libiconv.a";
 				PRODUCT_NAME = etpan;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -2179,34 +2176,13 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SRCROOT)/libsasl-ios/include",
-				);
 				INSTALL_PATH = /usr/local/lib;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/libsasl-ios/lib";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				LIBRARY_SEARCH_PATHS = "";
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "etpan-ios";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-			};
-			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
-		};
-		1585F08626A1DA6A00B822E1 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PLATFORM_NAME = iphoneos;
-				SDKROOT = iphoneos;
-			};
-			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
-		};
-		1585F08726A1DA6A00B822E1 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = NQLYU6MGPN;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
 		};
@@ -2220,16 +2196,19 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"${PROJECT_DIR}/../../local/lib/include/**",
 					"$(SRCROOT)/..",
 					"$(SRCROOT)/include",
+					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/inlcude",
 				);
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"-DHAVE_CONFIG_H=1",
 					"-DLIBETPAN_IOS_DISABLE_SSL=1",
 				);
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libiconv.a";
 			};
 			name = Debug;
 		};
@@ -2241,31 +2220,18 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"${PROJECT_DIR}/../../local/lib/include/**",
 					"$(SRCROOT)/..",
 					"$(SRCROOT)/include",
+					"${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/inlcude",
 				);
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_CFLAGS = (
 					"-DHAVE_CONFIG_H=1",
 					"-DLIBETPAN_IOS_DISABLE_SSL=1",
 				);
-			};
-			name = Release;
-		};
-		C6635C4F16E002340066276E /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PLATFORM_NAME = iphoneos;
-				SDKROOT = iphoneos;
-			};
-			name = Debug;
-		};
-		C6635C5016E002340066276E /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PLATFORM_NAME = iphoneos;
-				SDKROOT = iphoneos;
+				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libiconv.a";
 			};
 			name = Release;
 		};
@@ -2278,13 +2244,9 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SRCROOT)/libsasl-ios/include",
-				);
 				INSTALL_PATH = /usr/local/lib;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/libsasl-ios/lib";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				LIBRARY_SEARCH_PATHS = "";
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "etpan-ios";
 				SDKROOT = iphoneos;
@@ -2300,13 +2262,9 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_BITCODE = YES;
 				GCC_MODEL_TUNING = G5;
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(SRCROOT)/libsasl-ios/include",
-				);
 				INSTALL_PATH = /usr/local/lib;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/libsasl-ios/lib";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.4;
+				LIBRARY_SEARCH_PATHS = "";
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "etpan-ios";
 				SDKROOT = iphoneos;
@@ -2327,7 +2285,6 @@
 				INSTALL_PATH = /usr/local/lib;
 				LIBRARY_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib";
 				MACOSX_DEPLOYMENT_TARGET = "${inherited}";
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libiconv.a";
 				PRODUCT_NAME = etpan;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -2345,7 +2302,6 @@
 				INSTALL_PATH = /usr/local/lib;
 				LIBRARY_SEARCH_PATHS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib";
 				MACOSX_DEPLOYMENT_TARGET = "${inherited}";
-				OTHER_LIBTOOLFLAGS = "${PROJECT_DIR}/../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libiconv.a";
 				PRODUCT_NAME = etpan;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -2356,12 +2312,12 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		156AFEDA2672635E00AF0039 /* Build configuration list for PBXAggregateTarget "prepare-macos" */ = {
+		153AFC9926AAFEF100177147 /* Build configuration list for PBXAggregateTarget "prepare" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				156AFED82672635E00AF0039 /* Debug */,
-				1585F08726A1DA6A00B822E1 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */,
-				156AFED92672635E00AF0039 /* Release */,
+				153AFC9A26AAFEF100177147 /* Debug */,
+				153AFC9B26AAFEF100177147 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */,
+				153AFC9C26AAFEF100177147 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -2372,16 +2328,6 @@
 				1DEB91B208733DA50010E9CD /* Debug */,
 				1585F08326A1DA6A00B822E1 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */,
 				1DEB91B308733DA50010E9CD /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		C6635C4E16E002340066276E /* Build configuration list for PBXLegacyTarget "libetpan-prepare-ios" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				C6635C4F16E002340066276E /* Debug */,
-				1585F08626A1DA6A00B822E1 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */,
-				C6635C5016E002340066276E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
