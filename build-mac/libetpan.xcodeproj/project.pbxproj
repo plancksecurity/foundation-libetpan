@@ -7,6 +7,17 @@
 	objects = {
 
 /* Begin PBXAggregateTarget section */
+		153AFC8F26AAFC9D00177147 /* prepare-ios */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 153AFC9126AAFC9D00177147 /* Build configuration list for PBXAggregateTarget "prepare-ios" */;
+			buildPhases = (
+				153AFC9026AAFC9D00177147 /* Prepare */,
+			);
+			dependencies = (
+			);
+			name = "prepare-ios";
+			productName = "prepare-macos";
+		};
 		156AFED72672635E00AF0039 /* prepare-macos */ = {
 			isa = PBXAggregateTarget;
 			buildConfigurationList = 156AFEDA2672635E00AF0039 /* Build configuration list for PBXAggregateTarget "prepare-macos" */;
@@ -381,6 +392,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		153AFC9526AAFCB300177147 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 153AFC8F26AAFC9D00177147;
+			remoteInfo = "prepare-ios";
+		};
 		156AFEDC267263CA00AF0039 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
@@ -394,13 +412,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 1585EE1C269DCEB300B822E1;
 			remoteInfo = "build-libetpan-dependencies_macOS";
-		};
-		C6635C5116E0027B0066276E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C6635C4D16E002340066276E;
-			remoteInfo = "libetpan-prepare-ios";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1542,7 +1553,7 @@
 /* Begin PBXLegacyTarget section */
 		C6635C4D16E002340066276E /* libetpan-prepare-ios */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(SRCROOT)/update.sh";
+			buildArgumentsString = "-l $(SRCROOT)/update-macos.sh";
 			buildConfigurationList = C6635C4E16E002340066276E /* Build configuration list for PBXLegacyTarget "libetpan-prepare-ios" */;
 			buildPhases = (
 			);
@@ -1551,7 +1562,7 @@
 			dependencies = (
 			);
 			name = "libetpan-prepare-ios";
-			passBuildSettingsInEnvironment = 1;
+			passBuildSettingsInEnvironment = 0;
 			productName = "libetpan-prepare";
 		};
 /* End PBXLegacyTarget section */
@@ -1563,12 +1574,11 @@
 			buildPhases = (
 				C6635C3416DFF0030066276E /* ShellScript */,
 				C682E21B15B315EF00BE9DA7 /* Sources */,
-				C6740DB515B384FB00D4A16B /* ShellScript */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				C6635C5216E0027B0066276E /* PBXTargetDependency */,
+				153AFC9626AAFCB300177147 /* PBXTargetDependency */,
 			);
 			name = "libetpan ios";
 			productName = "static libetpan";
@@ -1603,6 +1613,10 @@
 			attributes = {
 				LastUpgradeCheck = 0720;
 				TargetAttributes = {
+					153AFC8F26AAFC9D00177147 = {
+						DevelopmentTeam = NQLYU6MGPN;
+						ProvisioningStyle = Automatic;
+					};
 					156AFED72672635E00AF0039 = {
 						CreatedOnToolsVersion = 12.5;
 						DevelopmentTeam = NQLYU6MGPN;
@@ -1635,11 +1649,30 @@
 				C682E21815B315EF00BE9DA7 /* libetpan ios */,
 				C6635C4D16E002340066276E /* libetpan-prepare-ios */,
 				156AFED72672635E00AF0039 /* prepare-macos */,
+				153AFC8F26AAFC9D00177147 /* prepare-ios */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		153AFC9026AAFC9D00177147 /* Prepare */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = Prepare;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "sh -l ${PROJECT_DIR}/update-macos.sh\n";
+		};
 		156AFEB9267208CE00AF0039 /* Copy Artefacts to Custom Build DIr */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1702,19 +1735,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "mkdir -p \"$BUILT_PRODUCTS_DIR/include\"\nrsync -aL \"$SRCROOT/../include/libetpan/\" \"$BUILT_PRODUCTS_DIR/include/libetpan/\"\n";
-		};
-		C6740DB515B384FB00D4A16B /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "cp \"$SRCROOT/libsasl-ios/lib/libsasl2.a\" \"$BUILT_PRODUCTS_DIR\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2092,6 +2112,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		153AFC9626AAFCB300177147 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 153AFC8F26AAFC9D00177147 /* prepare-ios */;
+			targetProxy = 153AFC9526AAFCB300177147 /* PBXContainerItemProxy */;
+		};
 		156AFEDD267263CA00AF0039 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 156AFED72672635E00AF0039 /* prepare-macos */;
@@ -2102,14 +2127,36 @@
 			name = "build-libetpan-dependencies_macOS";
 			targetProxy = 1585EF3826A07C2300B822E1 /* PBXContainerItemProxy */;
 		};
-		C6635C5216E0027B0066276E /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C6635C4D16E002340066276E /* libetpan-prepare-ios */;
-			targetProxy = C6635C5116E0027B0066276E /* PBXContainerItemProxy */;
-		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		153AFC9226AAFC9D00177147 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		153AFC9326AAFC9D00177147 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug_BUILD_ALL_SUPPORTED_ARCHS;
+		};
+		153AFC9426AAFC9D00177147 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NQLYU6MGPN;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		156AFED82672635E00AF0039 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2356,6 +2403,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		153AFC9126AAFC9D00177147 /* Build configuration list for PBXAggregateTarget "prepare-ios" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				153AFC9226AAFC9D00177147 /* Debug */,
+				153AFC9326AAFC9D00177147 /* Debug_BUILD_ALL_SUPPORTED_ARCHS */,
+				153AFC9426AAFC9D00177147 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		156AFEDA2672635E00AF0039 /* Build configuration list for PBXAggregateTarget "prepare-macos" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
