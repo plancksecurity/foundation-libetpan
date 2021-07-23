@@ -412,8 +412,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		153AFCAD26AB002F00177147 /* libiconv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libiconv.a; path = "../../../src_pEp4ThunderbirdMacInstaller/pep4thunderbird_macos_installer_buildscript/common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libiconv.a"; sourceTree = "<group>"; };
-		156AFE802670E65E00AF0039 /* libiconv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libiconv.a; path = ../../local/lib/libiconv.a; sourceTree = "<group>"; };
 		1585EF1D26A07B2A00B822E1 /* CommonPEPDependencies.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = CommonPEPDependencies.xcodeproj; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/CommonPEPDependencies.xcodeproj"; sourceTree = "<group>"; };
 		1585F01326A1930000B822E1 /* libiconv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libiconv.a; path = "../../common-dependency-build-helpers-4-apple-hardware/CommonPEPDependencies/build/lib/libiconv.a"; sourceTree = "<group>"; };
 		2307A00A170AAA5500C43C59 /* mailstream_compress.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mailstream_compress.c; sourceTree = "<group>"; };
@@ -896,9 +894,7 @@
 		156AFE7F2670E65E00AF0039 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				153AFCAD26AB002F00177147 /* libiconv.a */,
 				1585F01326A1930000B822E1 /* libiconv.a */,
-				156AFE802670E65E00AF0039 /* libiconv.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
