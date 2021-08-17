@@ -1641,10 +1641,12 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(PROJECT_DIR)/../libetpan-config.h",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "sh -l ${PROJECT_DIR}/run-autogen.sh\n";
+			showEnvVarsInLog = 0;
 		};
 		156AFEB9267208CE00AF0039 /* Copy Artefacts to Custom Build DIr */ = {
 			isa = PBXShellScriptBuildPhase;
