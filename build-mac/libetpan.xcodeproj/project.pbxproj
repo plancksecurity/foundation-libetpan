@@ -1645,7 +1645,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "sh -l ${PROJECT_DIR}/run-autogen.sh\n";
+			shellScript = "# Under unknown circumstances, this script is excecuted even the \"Ouput File\" exists. Thus we make our hands dirty and deny to run if exists\nFILE=${SCRIPT_OUTPUT_FILE_0}\nif [[ -f $FILE ]];then\n    echo \"####################################\"\n    echo \"Skipped Libetpan Prepare. Considered done already.\"\n    echo \"####################################\"\nelse\n    sh -l ${PROJECT_DIR}/run-autogen.sh\nfi\n\n";
 			showEnvVarsInLog = 0;
 		};
 		156AFEB9267208CE00AF0039 /* Copy Artefacts to Custom Build DIr */ = {
