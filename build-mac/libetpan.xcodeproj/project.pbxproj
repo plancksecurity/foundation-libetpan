@@ -810,10 +810,6 @@
 		C6F9EAB8105335BC0059C3BA /* mailsmtp_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mailsmtp_types.h; sourceTree = "<group>"; };
 		C6F9EAC1105335BD0059C3BA /* libetpan.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libetpan.h; sourceTree = "<group>"; };
 		C6F9EAC2105335BD0059C3BA /* libetpan_version.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = libetpan_version.c; sourceTree = "<group>"; };
-		C6F9ED9D105339200059C3BA /* libssl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.dylib; path = /usr/lib/libssl.dylib; sourceTree = "<absolute>"; };
-		C6F9EDAC1053395A0059C3BA /* libexpat.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libexpat.dylib; path = /usr/lib/libexpat.dylib; sourceTree = "<absolute>"; };
-		C6F9EDB1105339650059C3BA /* libcurl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcurl.dylib; path = /usr/lib/libcurl.dylib; sourceTree = "<absolute>"; };
-		C6F9EDBD105339EA0059C3BA /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = /usr/lib/libcrypto.dylib; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1535,10 +1531,6 @@
 		C6F9ED9A105338F60059C3BA /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				C6F9EDBD105339EA0059C3BA /* libcrypto.dylib */,
-				C6F9EDB1105339650059C3BA /* libcurl.dylib */,
-				C6F9EDAC1053395A0059C3BA /* libexpat.dylib */,
-				C6F9ED9D105339200059C3BA /* libssl.dylib */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
