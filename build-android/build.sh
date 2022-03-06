@@ -26,7 +26,9 @@ function build {
 }
 
 cd "$current_dir/.."
-tar xzf "$current_dir/../build-mac/autogen-result.tar.gz"
+#Source: https://gitea.pep.foundation/pEp.foundation/libetpan/src/commit/5e697c9cfec1a9746bf01226e70c3088b382f117/build-mac/run-autogen.sh
+echo "preparing"
+./autogen.sh --without-openssl --without-gnutls --without-sasl --without-curl --without-expat --without-zlib --disable-dependency-tracking 
 ./configure
 make stamp-prepare
 
