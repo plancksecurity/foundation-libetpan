@@ -1,9 +1,9 @@
 #!/bin/bash
 
-build_version=1
-ANDROID_PLATFORM=android-18
-archs="armeabi armeabi-v7a arm64-v8a x86 x86_64"
+build_version=2
+ANDROID_PLATFORM=android-21
 package_name=libetpan-android
+arch=$1
 
 current_dir="`pwd`"
 
@@ -14,6 +14,7 @@ fi
 
 function build {
   rm -rf "$current_dir/obj"
+  echo "$ANDROID_NDK/ndk-build TARGET_PLATFORM=$ANDROID_PLATFORM TARGET_ARCH_ABI=$TARGET_ARCH_ABI"
   
   cd "$current_dir/jni"
   $ANDROID_NDK/ndk-build TARGET_PLATFORM=$ANDROID_PLATFORM TARGET_ARCH_ABI=$TARGET_ARCH_ABI \
@@ -26,7 +27,7 @@ function build {
 }
 
 cd "$current_dir/.."
-#Source: https://gitea.pep.foundation/pEp.foundation/libetpan/src/commit/5e697c9cfec1a9746bf01226e70c3088b382f117/build-mac/run-autogen.sh
+# Source: https://gitea.pep.foundation/pEp.foundation/libetpan/src/commit/5e697c9cfec1a9746bf01226e70c3088b382f117/build-mac/run-autogen.sh
 echo "preparing"
 ./autogen.sh --without-openssl --without-gnutls --without-sasl --without-curl --without-expat --without-zlib --disable-dependency-tracking 
 ./configure
@@ -37,16 +38,7 @@ cp -RL include/libetpan "$current_dir/include"
 mkdir -p "$current_dir/$package_name-$build_version/$TARGET_ARCH_ABI/include"
 cp -RL include/libetpan "$current_dir/$package_name-$build_version/$TARGET_ARCH_ABI/include"
 
-# Start building.
-ANDROID_PLATFORM=android-18
-archs="armeabi armeabi-v7a x86"
-for arch in $archs ; do
-  TARGET_ARCH_ABI=$arch
-  build
-done
-ANDROID_PLATFORM=android-21
-archs="arm64-v8a x86_64"
-for arch in $archs ; do
-  TARGET_ARCH_ABI=$arch
-  build
-done
+echo "Building for arch = $arch"
+TARGET_ARCH_ABI=$arch
+
+build
