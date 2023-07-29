@@ -1,0 +1,33 @@
+
+
+stages:
+  - build
+
+
+windows-test:
+  stage: build
+  tags: [windows-shell]
+  script:
+    - install-script -name resolve-msbuild -force
+    - resolve-msbuild *
+
+    # - invoke-webrequest -uri "http://d.etpan.org/mailcore2-deps/zlib-win32/zlib-win32-1.zip" -usebasicparsing -outFile "zlib.zip"
+    # - expand-archive -path "zlib.zip" -DestinationPath "."
+    # - mkdir third-party
+    # - cp zlib-win32-1/include third-party
+    # - cp zlib-win32-1/lib/ third-party
+    # - cp zlib-win32-1/lib64  third-party
+    # - invoke-webrequest -uri "http://d.etpan.org/mailcore2-deps/misc-win32/openssl-1.0.1j-vs2013.zip" -usebasicparsing -outfile "openssl.zip"
+    # - expand-archive -path "openssl.zip" -destinationpath "mailcore2/Externals"
+    # - install-packageprovider -name nuget -force
+    # - install-module -name invoke-msbuild -force
+    # - ls
+    # - ls c:/
+    # - gci env:* | sort-object name
+    # - mkdir logs
+    # - invoke-msbuild -path $env:CI_PROJECT_DIR/build-windows/libetpan.sln -buildlogdirectorypath $env:CI_PROJECT_DIR/logs -keepbuildlogonsuccessfulbuilds -showbuildoutputincurrentwindow
+  artifacts:
+    name: "windows-buildlogs-$CI_COMMIT_SHA"
+    paths: [ logs ]
+    expire_in: 2 days
+
