@@ -1,0 +1,53 @@
+name: release
+
+on: push
+
+jobs:
+  ubuntu-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      PREFIX: /home/runner/install
+    steps:
+      - uses: actions/checkout@v4
+      - run: sh autogen.sh
+      - run: ./configure --prefix=/home/runner/install
+      - name: Build
+        run: make
+      - name: Install
+        run: make install
+      - name: Compress
+        run: |
+          cd /home/runner/install
+          tar cvj . > ../ubuntu-release.tar.bz2
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.head_ref || github.ref_name }}
+          files: /home/runner/ubuntu-release.tar.bz2
+          fail_on_unmatched_files: true
+
+  windows-release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup msbuild
+        uses: microsoft/setup-msbuild@v1.1
+      - name: Upgrade
+        run: |
+          $devenv = & vswhere.exe '-property' productPath
+          Start-Process -FilePath $devenv -ArgumentList 'build-windows\libetpan.sln /Upgrade' -Wait
+      - name: Build
+        run: msbuild build-windows\libetpan.sln /p:Platform=Win32 /p:Configuration=Release
+      - name: Compress
+        run: Compress-Archive -Path build-windows\Release\* -Destination windows-release.zip
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.head_ref || github.ref_name }}
+          files: windows-release.zip
+          fail_on_unmatched_files: true
+
