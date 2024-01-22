@@ -10,15 +10,10 @@ jobs:
       PREFIX: /home/runner/install
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt install asn1c
-      - run: |
-          python -m venv /home/runner/venv
-          . /home/runner/venv/bin/activate
-          pip install git+https://github.com/plancksecurity/foundation-yml2
-      - run: |
-          . /home/runner/venv/bin/activate
-          make -j8
-          make install
+      - run: sh autogen.sh
+      - run: ./configure --prefix=/home/runner/install
+      - run: make
+      - run: make install
       - name: archive artifacts on sha
         uses: actions/upload-artifact@v4
         with:
