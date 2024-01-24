@@ -37,6 +37,8 @@ jobs:
       - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1.1
       - name: Upgrade
-        run: start /w devenv.exe build-windows\libetpan.sln /upgrade
+        run: |
+          cd build-windows
+          start /w devenv.exe libetpan.sln /upgrade
       - name: Build
         run: msbuild build-windows\libetpan.sln /p:Platform=Win32 /p:Configuration=Release
