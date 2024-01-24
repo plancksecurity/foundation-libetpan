@@ -42,3 +42,12 @@ jobs:
           Start-Process -FilePath $devenv -ArgumentList 'build-windows\libetpan.sln /Upgrade' -Wait
       - name: Build
         run: msbuild build-windows\libetpan.sln /p:Platform=Win32 /p:Configuration=Release
+      - name: Compress
+        run: Compress-Archive -Path build-windows\Release\* -Destination windows-release.zip
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.head_ref || github.ref_name }}
+          files: windows-release.zip
+          fail_on_unmatched_files: true
+
