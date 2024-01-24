@@ -5,6 +5,8 @@ on: push
 jobs:
   ubuntu-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       PREFIX: /home/runner/install
     steps:
