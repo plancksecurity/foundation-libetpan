@@ -36,5 +36,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1.1
+      - name: Upgrade
+        run: start /w devenv.exe build-windows\libetpan.sln /upgrade
       - name: Build
-        run: msbuild build-windows\libetpan.sln /p:Platform=Win32 /p:Configuration=Release /p:PlatformToolset=v170
+        run: msbuild build-windows\libetpan.sln /p:Platform=Win32 /p:Configuration=Release
