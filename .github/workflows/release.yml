@@ -40,4 +40,4 @@ jobs:
           vs-version: 16.11
       - name: Build
         working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: msbuild build-windows/libetpan.sln -t:rebuild -verbosity:diag -property:Configuration=Release
+        run: msbuild build-windows\libetpan.sln /p:PlatformToolset=v170 /t:rebuild /verbosity:diag /property:Configuration=Release
