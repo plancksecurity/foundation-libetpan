@@ -34,10 +34,12 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - name: Install MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
       - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1.3
-        with:
-          vs-version: 16.11
       - name: Build
         working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: msbuild build-windows\libetpan.sln /p:PlatformToolset=v170 /t:rebuild /verbosity:diag /property:Configuration=Release
+        run: msbuild build-windows\libetpan.sln /t:rebuild /property:Configuration=Release
