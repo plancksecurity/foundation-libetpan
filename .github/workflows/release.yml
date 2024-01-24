@@ -42,4 +42,4 @@ jobs:
         uses: microsoft/setup-msbuild@v1.3
       - name: Build
         working-directory: ${{env.GITHUB_WORKSPACE}}
-        run: msbuild build-windows\libetpan.sln /t:rebuild /property:Configuration=Release /property:Platform=x86
+        run: msbuild build-windows\libetpan.sln /t:rebuild /property:Configuration=Release /p:Platform="Any CPU"
