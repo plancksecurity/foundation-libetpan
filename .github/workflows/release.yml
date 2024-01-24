@@ -28,3 +28,16 @@ jobs:
           files: /home/runner/ubuntu-release.tar.bz2
           fail_on_unmatched_files: true
 
+  windows-release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup msbuild
+        uses: microsoft/setup-msbuild@v1.3
+        with:
+          vs-version: 16.11
+      - name: Build
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: msbuild build-windows/libetpan.sln -t:rebuild -verbosity:diag -property:Configuration=Release
