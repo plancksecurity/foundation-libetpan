@@ -38,7 +38,7 @@ jobs:
         uses: microsoft/setup-msbuild@v1.1
       - name: Upgrade
         run: |
-          cd build-windows
-          devenv.exe libetpan.sln /upgrade
+          $devenv = & vswhere.exe '-property' productPath
+          Start-Process -FilePath $devenv -ArgumentList 'build-windows\libetpan.sln /Upgrade' -Wait
       - name: Build
         run: msbuild build-windows\libetpan.sln /p:Platform=Win32 /p:Configuration=Release
