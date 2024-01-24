@@ -37,4 +37,4 @@ jobs:
       - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1.1
       - name: Build
-        run: msbuild build-windows\libetpan.sln /p:Platform=Win32 /p:Configuration=Release /pToolsVersion=17.0
+        run: msbuild build-windows\libetpan.sln /p:Platform=Win32 /p:Configuration=Release /p:PlatformToolset=v170
