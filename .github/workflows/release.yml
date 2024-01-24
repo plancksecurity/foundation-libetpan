@@ -39,6 +39,6 @@ jobs:
       - name: Upgrade
         run: |
           cd build-windows
-          start /w devenv.exe libetpan.sln /upgrade
+          devenv.exe libetpan.sln /upgrade
       - name: Build
         run: msbuild build-windows\libetpan.sln /p:Platform=Win32 /p:Configuration=Release
