@@ -1,6 +1,0 @@
-﻿  iconv.c
-c:\users\test user\documents\visual studio 2015\projects\pepforoutlooksetupsolution\pepforoutlooksolution\dependencies\libiconv\libiconv\iconv.c(433): warning C4090: 'function': different 'const' qualifiers
-  localcharset.c
-  relocatable.c
-  Generating Code...
-  libiconv.vcxproj -> C:\Users\test user\Documents\Visual Studio 2015\Projects\pEpForOutlookSetupSolution\pEpForOutlookSolution\Dependencies\libiconv\ReleaseStatic_Win32\libiconvStatic.lib

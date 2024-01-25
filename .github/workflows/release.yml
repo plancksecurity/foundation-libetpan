@@ -10,9 +10,15 @@ jobs:
     env:
       PREFIX: /home/runner/install
     steps:
-      - uses: actions/checkout@v4
-      - run: sh autogen.sh
-      - run: ./configure --prefix=/home/runner/install
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.ALL_REPO_ACCESS_TOKEN }}
+      - name: Configure
+        run: |
+          sh autogen.sh
+          ./configure --prefix=/home/runner/install
       - name: Build
         run: make
       - name: Install
@@ -33,7 +39,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.ALL_REPO_ACCESS_TOKEN }}
       - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1.1
       - name: Upgrade
