@@ -1,3 +1,6 @@
 [submodule "build-windows/Dependencies/libiconv"]
 	path = build-windows/Dependencies/libiconv
 	url = https://github.com/plancksecurity/windows-libiconv.git
+[submodule "build-windows/Dependencies/zlib"]
+	path = build-windows/Dependencies/zlib
+	url = https://github.com/madler/zlib.git
