@@ -1,0 +1,3 @@
+[submodule "build-windows/Dependencies/libiconv"]
+	path = build-windows/Dependencies/libiconv
+	url = https://github.com/plancksecurity/windows-libiconv.git
