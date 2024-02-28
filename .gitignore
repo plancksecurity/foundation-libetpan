@@ -149,6 +149,8 @@ third-party
 /build-windows/Release
 /build-windows/x64/Debug
 /build-windows/x64/Release
+/build-windows/x64/
+/build-windows/.vs/
 
 ###################
 # Apple
