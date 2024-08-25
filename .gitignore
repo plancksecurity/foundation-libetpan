@@ -134,6 +134,7 @@ third-party
 /build-windows/libetpan/x64/Release
 /build-windows/libetpan/Debug
 /build-windows/libetpan/Release
+/build-windows/libetpan/ARM64/
 /build-windows/readmsg/x64/Debug
 /build-windows/readmsg/x64/Release
 /build-windows/readmsg/Debug
@@ -149,6 +150,8 @@ third-party
 /build-windows/Release
 /build-windows/x64/Debug
 /build-windows/x64/Release
+/build-windows/x64/
+/build-windows/.vs/
 
 ###################
 # Apple
