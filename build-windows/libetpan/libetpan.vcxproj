@@ -5,6 +5,10 @@
       <Configuration>Debug</Configuration>
       <Platform>ARM</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -16,6 +20,10 @@
     <ProjectConfiguration Include="Release|ARM">
       <Configuration>Release</Configuration>
       <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -29,7 +37,6 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BA4DED3C-E56F-4484-BFC3-9C13E461A1BE}</ProjectGuid>
     <RootNamespace>libetpan</RootNamespace>
-    <Keyword>x86Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -45,15 +52,25 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <PlatformToolset>v143</PlatformToolset>
+    <PreferredToolArchitecture>x86</PreferredToolArchitecture>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <PlatformToolset>v143</PlatformToolset>
+    <PreferredToolArchitecture>x86</PreferredToolArchitecture>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <PlatformToolset>v143</PlatformToolset>
+    <PreferredToolArchitecture />
+  </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <PlatformToolset>v143</PlatformToolset>
+    <PreferredToolArchitecture />
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -84,15 +101,6 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Platform)'!='Win32'">
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\vcpkg\installed\x86-windows\debug\lib;$(LibraryPath);</LibraryPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(SolutionDir)\vcpkg\installed\x86-windows\lib;$(LibraryPath);</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -129,7 +137,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-	    <AdditionalIncludeDirectories>../../src/data-types;../../src/driver;../../src/driver/interface;../../src/driver/tools;../../src/low-level/feed;../../src/low-level/imap;../../src/low-level/imf;../../src/low-level/maildir;../../src/low-level/mbox;../../src/low-level/mh;../../src/low-level/mime;../../src/low-level/nntp;../../src/low-level/pop3;../../src/low-level/smtp;../../src/windows;../../src/main;..;../include;../../src/driver/implementation/pop3;../../third-party/include;$(SolutionDir)/vcpkg/installed/x64-windows/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../src/data-types;../../src/driver;../../src/driver/interface;../../src/driver/tools;../../src/low-level/feed;../../src/low-level/imap;../../src/low-level/imf;../../src/low-level/maildir;../../src/low-level/mbox;../../src/low-level/mh;../../src/low-level/mime;../../src/low-level/nntp;../../src/low-level/pop3;../../src/low-level/smtp;../../src/windows;../../src/main;..;../include;../../src/driver/implementation/pop3;../../third-party/include;$(SolutionDir)/vcpkg/installed/x64-windows/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>HAVE_ICONV;_WIN32_WINNT=0x0A00;WIN32;_WINDOWS;_USRDLL;LIBETPAN_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -187,11 +195,48 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <PreprocessorDefinitions>HAVE_ICONV;_WIN32_WINNT=0x0A00;WIN32;_WINDOWS;_USRDLL;LIBETPAN_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+      <DisableSpecificWarnings>4996; 4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ForcedIncludeFiles>../StdAfx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>../../src/data-types;../../src/driver;../../src/driver/interface;../../src/driver/tools;../../src/low-level/feed;../../src/low-level/imap;../../src/low-level/imf;../../src/low-level/maildir;../../src/low-level/mbox;../../src/low-level/mh;../../src/low-level/mime;../../src/low-level/nntp;../../src/low-level/pop3;../../src/low-level/smtp;../../src/windows;../../src/main;..;../include;../../src/driver/implementation/pop3;../../third-party/include;$(SolutionDir)/vcpkg/installed/x86-windows/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>/DLL %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>Ws2_32.lib;iconv.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>../../third-party/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>C;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)libetpan.pdb</ProgramDatabaseFile>
+      <MapExports>true</MapExports>
+      <SubSystem>NotSet</SubSystem>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineARM64</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-	    <AdditionalIncludeDirectories>../../src/data-types;../../src/driver;../../src/driver/interface;../../src/driver/tools;../../src/low-level/feed;../../src/low-level/imap;../../src/low-level/imf;../../src/low-level/maildir;../../src/low-level/mbox;../../src/low-level/mh;../../src/low-level/mime;../../src/low-level/nntp;../../src/low-level/pop3;../../src/low-level/smtp;../../src/windows;../../src/main;..;../include;../../src/driver/implementation/pop3;../../third-party/include;$(SolutionDir)/vcpkg/installed/x86-windows/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../src/data-types;../../src/driver;../../src/driver/interface;../../src/driver/tools;../../src/low-level/feed;../../src/low-level/imap;../../src/low-level/imf;../../src/low-level/maildir;../../src/low-level/mbox;../../src/low-level/mh;../../src/low-level/mime;../../src/low-level/nntp;../../src/low-level/pop3;../../src/low-level/smtp;../../src/windows;../../src/main;..;../include;../../src/driver/implementation/pop3;../../third-party/include;$(SolutionDir)/vcpkg/installed/x86-windows/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>HAVE_ICONV;_WIN32_WINNT=0x0A00;WIN32;_WINDOWS;_USRDLL;LIBETPAN_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -216,6 +261,37 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>../../src/data-types;../../src/driver;../../src/driver/interface;../../src/driver/tools;../../src/low-level/feed;../../src/low-level/imap;../../src/low-level/imf;../../src/low-level/maildir;../../src/low-level/mbox;../../src/low-level/mh;../../src/low-level/mime;../../src/low-level/nntp;../../src/low-level/pop3;../../src/low-level/smtp;../../src/windows;../../src/main;..;../include;../../src/driver/implementation/pop3;../../third-party/include;$(SolutionDir)/vcpkg/installed/x86-windows/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_ICONV;_WIN32_WINNT=0x0A00;WIN32;_WINDOWS;_USRDLL;LIBETPAN_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+      <DisableSpecificWarnings>4996; 4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ForcedIncludeFiles>../StdAfx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <AdditionalOptions>/DLL %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>Ws2_32.lib;iconv.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../third-party/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>C;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <SubSystem>NotSet</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineARM64</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
